@@ -1,0 +1,21 @@
+/build/
+/dist/
+/out/
+/data/
+/*.log.*
+.ini
+*.properties
+config.ini
+channel.ini
+commands.txt
+giveaway-done.txt
+giveaway-gamelist.txt
+accounts.txt
+quotes.txt
+channels/
+commands.ser
+/Snip/
+/oldVersions
+/backup/
+/Essential Now Playing/
+drunklog*
