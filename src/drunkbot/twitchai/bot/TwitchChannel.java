@@ -6,9 +6,8 @@ import drunkbot.api.twitch.TwitchAPI;
 import drunkbot.twitchai.util.Globals;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-public class TwitchChannel
+public abstract class TwitchChannel
 {
     private String m_name;
     private ArrayList<TwitchUser> m_users;
@@ -17,7 +16,17 @@ public class TwitchChannel
     private CommandsCustom commandsCustom = new CommandsCustom(this);
     private MediaReader mediaReader = new MediaReader(this);
     private Quotes quotes = new Quotes(this);
-    private CurrencyMap currencyMap = new CurrencyMap(this);
+    private CurrencyManager currencyManager = new CurrencyManager(this)
+    {
+        @Override
+        public void onCurrencyGenerated(double amountGenerated)
+        {
+            sendMessage("Everyone here gets " + Globals.g_currencyFormat.format(amountGenerated) + " souls for being awesome!");
+            currencyManager.save();
+        }
+    };
+
+    public abstract void sendMessage(String message);
 
     private TwitchAPI twitchAPI = new TwitchAPI(this);
     private RiotAPI riotAPI = new RiotAPI(this);
@@ -33,7 +42,7 @@ public class TwitchChannel
         commandsCustom.load();
         riotAPI.load();
         twitchAPI.init();
-        currencyMap.init();
+        currencyManager.init();
     }
     {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
@@ -41,7 +50,7 @@ public class TwitchChannel
             @Override
             public void run()
             {
-                currencyMap.save();
+                currencyManager.save();
             }
         }));
     }
@@ -215,4 +224,10 @@ public class TwitchChannel
         }
         return replyString;
     }
+
+    public CurrencyManager getCurrencyManager()
+    {
+        return currencyManager;
+    }
+
 }

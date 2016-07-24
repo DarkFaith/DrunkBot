@@ -1,6 +1,7 @@
 package drunkbot.twitchai.util;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -30,6 +31,8 @@ public class Globals
     public static DateFormat       g_dateformat     = new SimpleDateFormat("dd.MM.yyyy");
     public static DateFormat       g_timeformat     = new SimpleDateFormat("HH:mm:ss");
     public static Date             g_date           = new Date();
+
+    public static DecimalFormat    g_currencyFormat = new DecimalFormat("0.00");
 
     // Global variables
     public static final String     g_commands_user  = "!help !info !performance !date !time !users !ops !mods !channel !channels !slots";

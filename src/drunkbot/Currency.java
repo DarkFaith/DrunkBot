@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 /**
  * Created by Kevin on 26/06/2016.
  */
-public class Currency
+public class Currency implements Serializable
 {
     static final long serialVersionUID = 1L;
     double total = 0.0;
@@ -52,6 +52,11 @@ public class Currency
     public void set(double newTotal)
     {
         this.total = newTotal;
+    }
+
+    public double get()
+    {
+        return this.total;
     }
 
     public void add(double amt)

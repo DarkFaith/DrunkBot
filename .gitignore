@@ -19,3 +19,6 @@ commands.ser
 /backup/
 /Essential Now Playing/
 drunklog*
+test/
+.idea/workspace.xml
+DrunkBot.jar

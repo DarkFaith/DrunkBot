@@ -6,10 +6,13 @@ import static drunkbot.twitchai.util.LogUtils.logErr;
 import static drunkbot.twitchai.util.GenUtils.exit;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.sun.javafx.binding.StringFormatter;
 import drunkbot.*;
+import drunkbot.twitchai.util.Globals;
 import org.jibble.pircbot.IrcException;
 import org.jibble.pircbot.PircBot;
 import org.jibble.pircbot.User;
@@ -112,11 +115,20 @@ public class TwitchAI extends PircBot
         }
     }
 
-    public void joinToChannel(String channel)
+    public void joinToChannel(final String channel)
     {
         logMsg("Attempting to join channel " + channel);
         joinChannel(channel);
-        m_channels.add(new TwitchChannel(channel));
+        m_channels.add(new TwitchChannel(channel)
+        {
+
+            @Override
+            public void sendMessage(String message)
+            {
+                sendTwitchMessage(channel, message);
+            }
+        });
+        FileUtils.directoryExists("data/channels/" + channel);
     }
 
     public void partFromChannel(String channel)
@@ -327,7 +339,7 @@ public class TwitchAI extends PircBot
     @Override
     public void onMessage(String channel, String sender, String login, String hostname, String message)
     {
-        logMsg("data/channels/" + channel, "/onMessage", "User: " + sender + " Hostname: " + hostname + " Message: " + message);
+        logMsg("data/channels/" + channel + "/logs/", "/onMessage", "User: " + sender + " Hostname: " + hostname + " Message: " + message);
 
         TwitchChannel twitch_channel = getTwitchChannel(channel);
 
@@ -546,7 +558,16 @@ public class TwitchAI extends PircBot
                         sendTwitchMessage(channel, twitch_channel.getCustomCommands().get("!rank"));
                     }
                     break;
-
+                case Command.CURRENCY:
+                    Currency userCurrency = twitch_channel.getCurrencyManager().getCurrency(user_sender);
+                    double currencyValue;
+                    if (userCurrency == null)
+                        currencyValue = 0;
+                    else
+                        currencyValue = userCurrency.get();
+                    String currencyString = Globals.g_currencyFormat.format(currencyValue);
+                    sendTwitchMessage(channel, user_sender + " has " + currencyString + " souls.");
+                    break;
                 // Mod Commands
                 case ModCommand.PURGE:
                     if (!senderIsMod)

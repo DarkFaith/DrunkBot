@@ -16,4 +16,5 @@ public interface Command
     String QUOTE = "quote";
     String MODS = "mods";
     String LIST_COMMANDS= "commands";
+    String CURRENCY = "souls";
 }
