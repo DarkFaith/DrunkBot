@@ -10,6 +10,7 @@ import com.mb3364.twitch.api.handlers.ChannelResponseHandler;
 import com.mb3364.twitch.api.handlers.StreamResponseHandler;
 import com.mb3364.twitch.api.models.Channel;
 import com.mb3364.twitch.api.models.Stream;
+import drunkbot.api.API;
 import drunkbot.twitchai.bot.TwitchChannel;
 
 import java.util.concurrent.Executors;
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Kevin Lagacé <kevlag100@hotmail.com>
  */
-public class TwitchAPI
+public abstract class TwitchAPI extends API
 {
     private Twitch twitch = new Twitch();
     private String channelName = "";
@@ -28,17 +29,17 @@ public class TwitchAPI
     TwitchChannel channel;
     Stream currentStream = null;
     Channel currentChannel = null;
-    private ScheduledExecutorService updateTwitchAPI = Executors.newSingleThreadScheduledExecutor();
-    Runnable updateTwitchRunnable = new Runnable()
-    {
-        @Override
-        public void run()
-        {
-            //twitch.channels().get(channelName, channelResponseHandler);
-            twitch.streams().get(channelName, streamResponseHandler);
-            //System.out.println("Stream loaded: " + currentStream.getChannel().getDisplayName());
-        }
-    };
+//    private ScheduledExecutorService updateTwitchAPI = Executors.newSingleThreadScheduledExecutor();
+//    Runnable updateTwitchRunnable = new Runnable()
+//    {
+//        @Override
+//        public void run()
+//        {
+//            //twitch.channels().get(channelName, channelResponseHandler);
+//
+//            //System.out.println("Stream loaded: " + currentStream.getChannel().getDisplayName());
+//        }
+//    };
     
     public TwitchAPI(TwitchChannel channel)
     {
@@ -48,53 +49,108 @@ public class TwitchAPI
     public void init()
     {
         this.channelName = channel.getNameNoTag();
-        updateTwitchAPI.scheduleAtFixedRate(updateTwitchRunnable, 0, 1, TimeUnit.MINUTES);
+        setUpdateInverval(1000 * 60 * 15); // 15 minutes
+        //updateTwitchAPI.scheduleAtFixedRate(updateTwitchRunnable, 0, 1, TimeUnit.MINUTES);
     }
-    
-    public ChannelResponseHandler channelResponseHandler = new ChannelResponseHandler() {
-        
-        
-        @Override
-        public void onSuccess(Channel chnl)
-        {
-            currentChannel = chnl;
-        }
 
-        @Override
-        public void onFailure(int i, String string, String string1)
-        {
-        }
-
-        @Override
-        public void onFailure(Throwable thrwbl)
-        {
-        }
-    };
-    
-    public StreamResponseHandler streamResponseHandler = new StreamResponseHandler() {
-        @Override
-        public void onSuccess(Stream stream)
-        {
-            currentStream = stream;
-        }
-
-        @Override
-        public void onFailure(int i, String string, String string1)
-        {
-        }
-
-        @Override
-        public void onFailure(Throwable thrwbl)
-        {
-        }
-    };
- 
-    public long getUpTime()
+    @Override
+    protected boolean update()
     {
-        if (currentStream != null)
-            return System.currentTimeMillis() - currentStream.getCreatedAt().getTime();
-        else
-            return 0;
+        try
+        {
+            twitch.streams().get(channelName, new StreamResponseHandler() {
+
+                @Override
+                public void onSuccess(Stream stream)
+                {
+                    currentStream = stream;
+                    setLastUpdateTime();
+                }
+
+                @Override
+                public void onFailure(int i, String string, String string1)
+                {
+                }
+
+                @Override
+                public void onFailure(Throwable thrwbl)
+                {
+                }
+            });
+
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+//    public ChannelResponseHandler channelResponseHandler = new ChannelResponseHandler() {
+//
+//
+//        @Override
+//        public void onSuccess(Channel chnl)
+//        {
+//            currentChannel = chnl;
+//        }
+//
+//        @Override
+//        public void onFailure(int i, String string, String string1)
+//        {
+//        }
+//
+//        @Override
+//        public void onFailure(Throwable thrwbl)
+//        {
+//        }
+//    };
+ 
+    public void sendUpTime()
+    {
+        twitch.streams().get(channelName, new StreamResponseHandler() {
+
+            @Override
+            public void onSuccess(Stream stream)
+            {
+                currentStream = stream;
+                if (currentStream == null)
+                {
+                    channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
+                    return;
+                }
+                setLastUpdateTime();
+
+                long uptime = System.currentTimeMillis() - currentStream.getCreatedAt().getTime();
+                String replyString = channel.getNameNoTag() + " has been live for ";
+                if (uptime < 10000 && uptime >= 0) {
+                    channel.sendMessage("Just started! Calm yo tits!");
+                    return;
+                } else if (uptime >= 10000 && uptime < 60000) {
+                    replyString += "less than a minute";
+                } else if (uptime >= 60000 && uptime < 3600000) { // over a minute, under an hour
+                    replyString += uptime/1000/60 + " minutes";
+                } else if (uptime >= 3600000) {
+                    String hourString;
+                    String minuteString;
+                    long minutes = (uptime/(1000*60));
+                    long hours = minutes / 60;
+                    minutes = minutes - (hours * 60);
+                    minuteString = minutes > 1 ? "minutes" : "minute";
+                    hourString = hours > 1 ? "hours" : "hour";
+                    replyString += hours + " " + hourString + " and " + minutes + " " + minuteString;
+                }
+                channel.sendMessage(replyString);
+            }
+
+            @Override
+            public void onFailure(int i, String string, String string1)
+            {
+            }
+
+            @Override
+            public void onFailure(Throwable thrwbl)
+            {
+            }
+        });
     }
     
     public String getCurrentGame()
@@ -104,10 +160,8 @@ public class TwitchAPI
         else
             return "No game detected";
     }
-   
 
-    
-    
+
 //    private String upTime() {
 //        CloseableHttpClient httpClient = HttpClients.createDefault();
 //        HttpGet httpGet = new HttpGet(baseURL);

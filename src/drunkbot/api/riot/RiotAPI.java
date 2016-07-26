@@ -19,11 +19,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import drunkbot.CommandsCustom;
+import drunkbot.api.API;
+import drunkbot.api.Storable;
 import drunkbot.twitchai.bot.TwitchChannel;
 import drunkbot.twitchai.util.Globals;
+import drunkbot.twitchai.util.StringUtils;
 import net.rithms.riot.api.RiotApi;
 import net.rithms.riot.api.RiotApiException;
+import net.rithms.riot.constant.QueueType;
 import net.rithms.riot.constant.Region;
+import net.rithms.riot.constant.Season;
 import net.rithms.riot.dto.League.League;
 import net.rithms.riot.dto.League.LeagueEntry;
 
@@ -31,47 +36,28 @@ import net.rithms.riot.dto.League.LeagueEntry;
  *
  * @author Kevin
  */
-public class RiotAPI
+public abstract class RiotAPI extends API implements Storable
 {
     TwitchChannel channel;
     RiotApi api = new RiotApi(Globals.g_api_riot_oauth);
-    ScheduledExecutorService updateRiotAPI = Executors.newSingleThreadScheduledExecutor();
     ArrayList<String> accountList = new ArrayList<>(5);
     ArrayList<CachedSummoner> cachedSummoners = new ArrayList<>();
     //Map<String, Summoner> summoners;
     Map<String, List<League>> leagueMap;
-    
-    Runnable updateRiotRunnable = new Runnable()
-    {
-        @Override
-        public void run()
-        {
-            try
-            {
-                System.out.println("Updating summoner ranks...");
-                System.out.println("Accounts: " + accountList.get(0) + " " + accountList.get(1));
-                //summoners = api.getSummonersByName(Region.NA, (String[]) accountList.toArray());
-                leagueMap = api.getLeagueBySummoners((String[]) accountList.toArray());
-                System.out.println("test");
-                System.out.println(leagueMap.get(accountList.get(0)).get(4));
-                
-            } catch (RiotApiException ex)
-            {
-                System.out.println(ex);
-                Logger.getLogger(RiotAPI.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    };
-    
+
     public RiotAPI(TwitchChannel channel)
     {
         this.channel = channel;
         api.setRegion(Region.NA);
     }
-    
 
-    public void load() {
-        System.out.println("Loading accounts...");
+    public void init()
+    {
+        setUpdateInverval(1000 * 60 * 30);
+    }
+
+    public boolean load() {
+        System.out.println("Loading accounts from: " + channel.getDir() + "accounts.txt");
         try (FileReader fr = new FileReader(channel.getDir() + "accounts.txt"); BufferedReader br = new BufferedReader(fr))
         {
             String accountName;
@@ -82,23 +68,27 @@ public class RiotAPI
                     accountList.add(accountName);
                 }
             }
-            updateRiotAPI.scheduleAtFixedRate(updateRiotRunnable, 0, 1, TimeUnit.HOURS);
+            init();
+            return true;
         } catch (IOException ex)
         {
             Logger.getLogger(CommandsCustom.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
     }
     
-    public void save() {
+    public boolean save() {
         try (FileWriter writer = new FileWriter("accounts.txt"))
         {
             for (String accountName : accountList)
             {
                 writer.write(accountName + "\r\n");
             }
+            return true;
         } catch (IOException ex)
         {
             Logger.getLogger(CommandsCustom.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
     }
     
@@ -113,28 +103,29 @@ public class RiotAPI
         }
     }
     
-    public String getRank(String summonerName)
+    public String getRank(String summonerID)
     {
-        if (!accountList.contains(summonerName))
+        if (!accountList.contains(summonerID))
             return "Summoner rank not available";
         if (leagueMap == null)
         {
-            updateRiotAPI.execute(updateRiotRunnable);
-            return "Fetching data from Riot API... Try again in a few minutes";
+            doUpdate(true);
         }
-        List<League> summonerLeagueList = leagueMap.get(summonerName);
+        List<League> summonerLeagueList = leagueMap.get(summonerID);
+
         for (League league : summonerLeagueList)
         {
-            if (league.getQueue().equals("RANKED_SOLO_5X5"))
+            System.out.println("Loading rank for: " + league.getName());
+            if (league.getQueue().equals(QueueType.RANKED_SOLO_5x5.name()))
             {
                 List<LeagueEntry> entryList = league.getEntries();
                 for (LeagueEntry entry : entryList)
                 {
-                    if (entry.getPlayerOrTeamId().equals(summonerName))
+                    if (entry.getPlayerOrTeamId().equals(summonerID))
                     {
-                        return entry.getDivision() + " " + entry.getLeaguePoints();
+                        //String tier = StringUtils.toTitleCase(league.getTier());
+                        return league.getTier() + " " + entry.getDivision() + " " + entry.getLeaguePoints() + "LP";
                     }
-                    
                 }
                 break;
             }
@@ -142,5 +133,40 @@ public class RiotAPI
         return "Failed to find";
     }
 
-    
+    public String getHighestRank()
+    {
+        ArrayList<String> accountRanks = new ArrayList<>(accountList.size());
+        for (String id : accountList) {
+            accountRanks.add(getRank(id));
+        }
+
+        String highestRank = "BRONZE V 0";
+        //String highestRank = "CHALLENGER I 0";
+        for (String rank : accountRanks) {
+            int rankCompare = Util.compareRanks(highestRank, rank);
+            if (rankCompare < 0)
+                highestRank = rank;
+        }
+
+        return highestRank;
+    }
+
+    @Override
+    protected boolean update()
+    {
+        try
+        {
+            System.out.println("Updating Riot API...");
+            //summoners = api.getSummonersByName(Region.NA, (String[]) accountList.toArray());
+            //api.setSeason(Season.SEASON2016);
+            leagueMap = api.getLeagueBySummoners(accountList.toArray(new String[accountList.size()]));
+            setLastUpdateTime();
+            return true;
+        } catch (Exception ex)
+        {
+            System.out.println(ex);
+            Logger.getLogger(RiotAPI.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+    }
 }

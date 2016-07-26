@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="riot-api-java">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/riot-api-java.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/lib/riot-api-java-3.9.0/src" />
+    </SOURCES>
+  </library>
+</component>

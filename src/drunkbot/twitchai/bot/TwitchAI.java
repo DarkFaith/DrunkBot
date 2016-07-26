@@ -6,11 +6,9 @@ import static drunkbot.twitchai.util.LogUtils.logErr;
 import static drunkbot.twitchai.util.GenUtils.exit;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.sun.javafx.binding.StringFormatter;
 import drunkbot.*;
 import drunkbot.twitchai.util.Globals;
 import org.jibble.pircbot.IrcException;
@@ -543,7 +541,8 @@ public class TwitchAI extends PircBot
                     break;
 
                 case Command.UPTIME:
-                    sendTwitchMessage(channel, twitch_channel.getUpTime());
+                    twitch_channel.sendUpTime();
+                    //sendTwitchMessage(channel, twitch_channel.sendUpTime());
                     break;
 
                 case Command.CURRENT_GAME:
@@ -553,10 +552,11 @@ public class TwitchAI extends PircBot
                 case Command.RANK:
                     //TODO: Remove hardcoded rank
                     //sendTwitchMessage(channel, twitch_channel.getRiotAPI().getRank("20445322"));
-                    if (twitch_channel.getCustomCommands().exists("!rank"))
-                    {
-                        sendTwitchMessage(channel, twitch_channel.getCustomCommands().get("!rank"));
-                    }
+                    sendTwitchMessage(channel, twitch_channel.getRiotAPI().getHighestRank());
+//                    if (twitch_channel.getCustomCommands().exists("!rank"))
+//                    {
+//                        sendTwitchMessage(channel, twitch_channel.getCustomCommands().get("!rank"));
+//                    }
                     break;
                 case Command.CURRENCY:
                     Currency userCurrency = twitch_channel.getCurrencyManager().getCurrency(user_sender);

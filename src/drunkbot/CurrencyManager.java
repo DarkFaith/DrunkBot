@@ -37,13 +37,12 @@ public abstract class CurrencyManager
             ArrayList<TwitchUser> users = channel.getUsers();
             if (users.isEmpty())
             {
-                System.out.println("User list is empty");
+                System.out.println("User list is empty. No currency given");
                 return;
             }
             for (int i = 0; i < users.size(); i++)
             {
                 String userName = users.get(i).getName();
-
 
                 // Add user if not in currency list
                 if (!currencyMap.containsKey(userName))
@@ -63,7 +62,6 @@ public abstract class CurrencyManager
     {
         this.channel = channel;
     }
-
 
     public double getGenerateAmount()
     {
@@ -103,7 +101,7 @@ public abstract class CurrencyManager
 
     public void load()
     {
-        try (FileInputStream fis = new FileInputStream(channel.getDir() + "Currency.properties");
+        try (FileInputStream fis = new FileInputStream(channel.getDir() + "Currency.ser");
         ObjectInputStream ois = new ObjectInputStream(fis)) {
             currencyMap.putAll((HashMap) ois.readObject());
             //FileInputStream is = new FileInputStream();
@@ -121,7 +119,7 @@ public abstract class CurrencyManager
     public void save()
     {
 
-        try (FileOutputStream fos = new FileOutputStream(channel.getDir() + "Currency.properties");
+        try (FileOutputStream fos = new FileOutputStream(channel.getDir() + "Currency.ser");
              ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             if (!currencyMap.isEmpty())
             {
@@ -138,7 +136,6 @@ public abstract class CurrencyManager
 
     public Currency getCurrency(String user)
     {
-        System.out.println("Looking for user: " + user + " in currencyMap");
         return currencyMap.get(user);
     }
 
