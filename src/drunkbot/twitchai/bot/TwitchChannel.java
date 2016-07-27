@@ -1,6 +1,7 @@
 package drunkbot.twitchai.bot;
 
 import drunkbot.*;
+import drunkbot.api.blizzard.BlizzardAPI;
 import drunkbot.api.riot.RiotAPI;
 import drunkbot.api.twitch.TwitchAPI;
 import drunkbot.twitchai.bot.channel.Settings;
@@ -37,6 +38,14 @@ public abstract class TwitchChannel
         }
     };
     private RiotAPI riotAPI = new RiotAPI(this)
+    {
+        @Override
+        public void onSuccess(String messageReply)
+        {
+
+        }
+    };
+    private BlizzardAPI blizzAPI = new BlizzardAPI(this)
     {
         @Override
         public void onSuccess(String messageReply)
@@ -247,4 +256,8 @@ public abstract class TwitchChannel
         return currencyManager;
     }
 
+    public BlizzardAPI getBlizzAPI()
+    {
+        return blizzAPI;
+    }
 }

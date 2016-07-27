@@ -549,15 +549,26 @@ public class TwitchAI extends PircBot
                     sendTwitchMessage(channel, twitch_channel.getTwitchAPI().getCurrentGame());
                     break;
 
+                case "rankOW":
+                    sendTwitchMessage(channel, twitch_channel.getBlizzAPI().getRank());
+                    break;
                 case Command.RANK:
+                    String currentGame = twitch_channel.getTwitchAPI().getCurrentGame();
+                    System.out.println(currentGame);
+                    if (currentGame.equals("Overwatch")) {
+                        sendTwitchMessage(channel, "Overwatch Rank: " + twitch_channel.getBlizzAPI().getRank());
+                    } else {
+                        sendTwitchMessage(channel, "League Rank: " + twitch_channel.getRiotAPI().getHighestRank());
+                    }
                     //TODO: Remove hardcoded rank
                     //sendTwitchMessage(channel, twitch_channel.getRiotAPI().getRank("20445322"));
-                    sendTwitchMessage(channel, twitch_channel.getRiotAPI().getHighestRank());
+
 //                    if (twitch_channel.getCustomCommands().exists("!rank"))
 //                    {
 //                        sendTwitchMessage(channel, twitch_channel.getCustomCommands().get("!rank"));
 //                    }
                     break;
+
                 case Command.CURRENCY:
                     Currency userCurrency = twitch_channel.getCurrencyManager().getCurrency(user_sender);
                     double currencyValue;

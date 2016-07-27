@@ -38,7 +38,6 @@ import net.rithms.riot.dto.League.LeagueEntry;
  */
 public abstract class RiotAPI extends API implements Storable
 {
-    TwitchChannel channel;
     RiotApi api = new RiotApi(Globals.g_api_riot_oauth);
     ArrayList<String> accountList = new ArrayList<>(5);
     ArrayList<CachedSummoner> cachedSummoners = new ArrayList<>();
@@ -47,7 +46,7 @@ public abstract class RiotAPI extends API implements Storable
 
     public RiotAPI(TwitchChannel channel)
     {
-        this.channel = channel;
+        super(channel);
         api.setRegion(Region.NA);
     }
 
@@ -57,8 +56,8 @@ public abstract class RiotAPI extends API implements Storable
     }
 
     public boolean load() {
-        System.out.println("Loading accounts from: " + channel.getDir() + "accounts.txt");
-        try (FileReader fr = new FileReader(channel.getDir() + "accounts.txt"); BufferedReader br = new BufferedReader(fr))
+        System.out.println("Loading accounts from: " + getChannel().getDir() + "accounts.txt");
+        try (FileReader fr = new FileReader(getChannel().getDir() + "accounts.txt"); BufferedReader br = new BufferedReader(fr))
         {
             String accountName;
             while ((accountName = br.readLine()) != null)

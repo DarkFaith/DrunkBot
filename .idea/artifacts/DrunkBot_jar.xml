@@ -3,9 +3,10 @@
     <output-path>$PROJECT_DIR$/</output-path>
     <root id="archive" name="DrunkBot.jar">
       <element id="module-output" name="DrunkBot" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/gson-2.7.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/riot-api-java.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/pircbot.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/json-20150729.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/riot-api-java.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/twitch-api-wrapper-0.3-jar-with-dependencies.jar" path-in-jar="/" />
     </root>
   </artifact>

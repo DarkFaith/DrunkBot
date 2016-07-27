@@ -43,6 +43,7 @@ public abstract class TwitchAPI extends API
     
     public TwitchAPI(TwitchChannel channel)
     {
+        super(channel);
         this.channel = channel;
     }
 
@@ -155,10 +156,39 @@ public abstract class TwitchAPI extends API
     
     public String getCurrentGame()
     {
-        if (currentStream != null)
-            return currentStream.getGame();
+        twitch.streams().get(channelName, new StreamResponseHandler() {
+
+            @Override
+            public void onSuccess(Stream stream)
+            {
+                currentStream = stream;
+                if (currentStream == null)
+                {
+                    channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
+                    return;
+                }
+//                String game = currentStream.getGame();
+//                if (game != null && !game.isEmpty())
+//                    channel.sendMessage(game);
+//                else
+//                    channel.sendMessage("No game detected.");
+            }
+
+            @Override
+            public void onFailure(int i, String string, String string1)
+            {
+            }
+
+            @Override
+            public void onFailure(Throwable thrwbl)
+            {
+            }
+        });
+        String game = currentStream.getGame();
+        if (game != null && !game.isEmpty())
+            return game;
         else
-            return "No game detected";
+            return "No game detected.";
     }
 
 

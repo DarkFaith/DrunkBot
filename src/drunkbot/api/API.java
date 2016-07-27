@@ -1,5 +1,7 @@
 package drunkbot.api;
 
+import drunkbot.twitchai.bot.TwitchChannel;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -12,8 +14,21 @@ interface Updatable
 {
     void onSuccess(String messageReply);
 }
+
 public abstract class API implements Updatable
 {
+    private TwitchChannel channel;
+    private API(){};
+    public API(TwitchChannel channel)
+    {
+        this.channel = channel;
+    }
+
+    public TwitchChannel getChannel()
+    {
+        return channel;
+    }
+
     private long updateInterval = 1000 * 60 * 30;
     private long lastUpdateTime = System.currentTimeMillis();
     //private ScheduledExecutorService updateAPIExec = Executors.newSingleThreadScheduledExecutor();
