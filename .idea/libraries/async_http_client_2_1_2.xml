@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="async-http-client-2.1.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../Java-Twitch-Api-Wrapper/lib/async-http-client-2.1.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../Java-Twitch-Api-Wrapper/lib/java-async-http-2.1.2.zip!/java-async-http-2.1.2/src/main/java" />
+    </SOURCES>
+  </library>
+</component>

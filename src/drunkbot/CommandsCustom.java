@@ -102,11 +102,15 @@ public class CommandsCustom {
      * @return true if key was added, false if key was overwritten
      */
     public void add(String key, String value) {
+        if (!key.startsWith("!"))
+            key = "!" + key;
         commandList.put(key, value);
         save();
     }
     
     public boolean remove(String key) {
+        if (!key.startsWith("!"))
+            key = "!" + key;
         return commandList.remove(key) != null;
     }
     

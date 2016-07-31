@@ -11,6 +11,7 @@ import java.util.Arrays;
 
 import drunkbot.*;
 import drunkbot.twitchai.util.Globals;
+import drunkbot.twitchai.util.LogUtils;
 import org.jibble.pircbot.IrcException;
 import org.jibble.pircbot.PircBot;
 import org.jibble.pircbot.User;
@@ -463,7 +464,7 @@ public class TwitchAI extends PircBot
                                 StringBuilder quoteBuilder = new StringBuilder();
                                 for (int i = 2; i < msg_array.length; i++)
                                 {
-                                    quoteBuilder.append(msg_array[i]);
+                                    quoteBuilder.append(msg_array[i]).append(" ");
                                 }
                                 if (quoteBuilder.length() >= 1)
                                 {
@@ -549,12 +550,16 @@ public class TwitchAI extends PircBot
                     sendTwitchMessage(channel, twitch_channel.getTwitchAPI().getCurrentGame());
                     break;
 
-                case "rankOW":
+                case Command.RANK_OVERWATCH:
                     sendTwitchMessage(channel, twitch_channel.getBlizzAPI().getRank());
+                    break;
+                case Command.RANK_LOL:
+                    sendTwitchMessage(channel, twitch_channel.getRiotAPI().getHighestRank());
                     break;
                 case Command.RANK:
                     String currentGame = twitch_channel.getTwitchAPI().getCurrentGame();
-                    System.out.println(currentGame);
+                    System.out.println("" + currentGame);
+                    LogUtils.logMsg(currentGame);
                     if (currentGame.equals("Overwatch")) {
                         sendTwitchMessage(channel, "Overwatch Rank: " + twitch_channel.getBlizzAPI().getRank());
                     } else {
@@ -568,7 +573,6 @@ public class TwitchAI extends PircBot
 //                        sendTwitchMessage(channel, twitch_channel.getCustomCommands().get("!rank"));
 //                    }
                     break;
-
                 case Command.CURRENCY:
                     Currency userCurrency = twitch_channel.getCurrencyManager().getCurrency(user_sender);
                     double currencyValue;
@@ -621,7 +625,7 @@ public class TwitchAI extends PircBot
                             StringBuilder cmdTextBuilder = new StringBuilder();
                             for (int i = 3; i < msg_array.length; i++)
                             {
-                                cmdTextBuilder.append(msg_array[i]);
+                                cmdTextBuilder.append(msg_array[i]).append(" ");
                             }
                             String cmdText = cmdTextBuilder.toString();
 

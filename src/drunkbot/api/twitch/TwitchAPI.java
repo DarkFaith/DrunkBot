@@ -10,12 +10,16 @@ import com.mb3364.twitch.api.handlers.ChannelResponseHandler;
 import com.mb3364.twitch.api.handlers.StreamResponseHandler;
 import com.mb3364.twitch.api.models.Channel;
 import com.mb3364.twitch.api.models.Stream;
+import com.sun.org.apache.xerces.internal.impl.Constants;
 import drunkbot.api.API;
 import drunkbot.twitchai.bot.TwitchChannel;
+import drunkbot.twitchai.util.LogUtils;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import static drunkbot.twitchai.util.LogUtils.logMsg;
 
 /**
  *
@@ -57,133 +61,66 @@ public abstract class TwitchAPI extends API
     @Override
     protected boolean update()
     {
-        try
+        Stream stream = twitch.streams().get(channelName);
+        if (stream == null)
         {
-            twitch.streams().get(channelName, new StreamResponseHandler() {
-
-                @Override
-                public void onSuccess(Stream stream)
-                {
-                    currentStream = stream;
-                    setLastUpdateTime();
-                }
-
-                @Override
-                public void onFailure(int i, String string, String string1)
-                {
-                }
-
-                @Override
-                public void onFailure(Throwable thrwbl)
-                {
-                }
-            });
-
-        } catch (Exception e) {
+            LogUtils.logErr("data/channels/" + channel.getName() + "/logs/", "/api", "Failed to update stream object. Twitch API may be down");
             return false;
+        } else {
+            currentStream = stream;
+            setLastUpdateTime();
+            LogUtils.logMsg("data/channels/" + channel.getName() + "/logs/", "/api", "Successfully updated stream object");
+            return true;
         }
-        return true;
     }
-
-//    public ChannelResponseHandler channelResponseHandler = new ChannelResponseHandler() {
-//
-//
-//        @Override
-//        public void onSuccess(Channel chnl)
-//        {
-//            currentChannel = chnl;
-//        }
-//
-//        @Override
-//        public void onFailure(int i, String string, String string1)
-//        {
-//        }
-//
-//        @Override
-//        public void onFailure(Throwable thrwbl)
-//        {
-//        }
-//    };
  
     public void sendUpTime()
     {
-        twitch.streams().get(channelName, new StreamResponseHandler() {
+        boolean updated = update();
 
-            @Override
-            public void onSuccess(Stream stream)
-            {
-                currentStream = stream;
-                if (currentStream == null)
-                {
-                    channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
-                    return;
-                }
-                setLastUpdateTime();
+        if (currentStream == null)
+        {
+            channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
+        }
+        setLastUpdateTime();
 
-                long uptime = System.currentTimeMillis() - currentStream.getCreatedAt().getTime();
-                String replyString = channel.getNameNoTag() + " has been live for ";
-                if (uptime < 10000 && uptime >= 0) {
-                    channel.sendMessage("Just started! Calm yo tits!");
-                    return;
-                } else if (uptime >= 10000 && uptime < 60000) {
-                    replyString += "less than a minute";
-                } else if (uptime >= 60000 && uptime < 3600000) { // over a minute, under an hour
-                    replyString += uptime/1000/60 + " minutes";
-                } else if (uptime >= 3600000) {
-                    String hourString;
-                    String minuteString;
-                    long minutes = (uptime/(1000*60));
-                    long hours = minutes / 60;
-                    minutes = minutes - (hours * 60);
-                    minuteString = minutes > 1 ? "minutes" : "minute";
-                    hourString = hours > 1 ? "hours" : "hour";
-                    replyString += hours + " " + hourString + " and " + minutes + " " + minuteString;
-                }
-                channel.sendMessage(replyString);
-            }
-
-            @Override
-            public void onFailure(int i, String string, String string1)
-            {
-            }
-
-            @Override
-            public void onFailure(Throwable thrwbl)
-            {
-            }
-        });
+        long uptime = System.currentTimeMillis() - currentStream.getCreatedAt().getTime();
+        String replyString = channel.getNameNoTag() + " has been live for ";
+        if (!updated)
+            replyString += "at least ";
+        if (uptime < 10000 && uptime >= 0)
+        {
+            channel.sendMessage("Just started! Calm yo tits!");
+            return;
+        } else if (uptime >= 10000 && uptime < 60000)
+        {
+            replyString += "less than a minute";
+        } else if (uptime >= 60000 && uptime < 3600000)
+        { // over a minute, under an hour
+            replyString += uptime / 1000 / 60 + " minutes";
+        } else if (uptime >= 3600000)
+        {
+            String hourString;
+            String minuteString;
+            long minutes = (uptime / (1000 * 60));
+            long hours = minutes / 60;
+            minutes = minutes - (hours * 60);
+            minuteString = minutes > 1 ? "minutes" : "minute";
+            hourString = hours > 1 ? "hours" : "hour";
+            replyString += hours + " " + hourString + " and " + minutes + " " + minuteString;
+        }
+        channel.sendMessage(replyString);
     }
     
     public String getCurrentGame()
     {
-        twitch.streams().get(channelName, new StreamResponseHandler() {
+        LogUtils.logMsg("GetCurrentGame start");
+        boolean updated = update();
+        LogUtils.logMsg("GetCurrentGame: " + updated);
 
-            @Override
-            public void onSuccess(Stream stream)
-            {
-                currentStream = stream;
-                if (currentStream == null)
-                {
-                    channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
-                    return;
-                }
-//                String game = currentStream.getGame();
-//                if (game != null && !game.isEmpty())
-//                    channel.sendMessage(game);
-//                else
-//                    channel.sendMessage("No game detected.");
-            }
+        if (currentStream == null)
+            return "No game detected.";
 
-            @Override
-            public void onFailure(int i, String string, String string1)
-            {
-            }
-
-            @Override
-            public void onFailure(Throwable thrwbl)
-            {
-            }
-        });
         String game = currentStream.getGame();
         if (game != null && !game.isEmpty())
             return game;

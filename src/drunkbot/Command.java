@@ -6,6 +6,8 @@ package drunkbot;
 public interface Command
 {
     String RANK = "rank";
+    String RANK_OVERWATCH = "rankow";
+    String RANK_LOL = "ranklol";
     String UPTIME = "uptime";
     String CURRENT_GAME = "game";
     String RUNES = "runes";

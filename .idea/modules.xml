@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/DrunkBot.iml" filepath="$PROJECT_DIR$/DrunkBot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Java-Twitch-Api-Wrapper/twitch-api-wrapper.iml" filepath="$PROJECT_DIR$/../Java-Twitch-Api-Wrapper/twitch-api-wrapper.iml" />
     </modules>
   </component>
 </project>

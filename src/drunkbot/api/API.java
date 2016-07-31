@@ -78,6 +78,10 @@ public abstract class API implements Updatable
        return updateInterval - (System.currentTimeMillis() - lastUpdateTime) <= 0;
     }
 
+    public boolean isUpdateDue(long customUpdateInterval) {
+        return (customUpdateInterval - (System.currentTimeMillis() - lastUpdateTime) <= 0);
+    }
+
     public void setLastUpdateTime() {
         lastUpdateTime = System.currentTimeMillis();
     }
