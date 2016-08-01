@@ -82,7 +82,6 @@ public abstract class TwitchAPI extends API
         {
             channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
         }
-        setLastUpdateTime();
 
         long uptime = System.currentTimeMillis() - currentStream.getCreatedAt().getTime();
         String replyString = channel.getNameNoTag() + " has been live for ";
