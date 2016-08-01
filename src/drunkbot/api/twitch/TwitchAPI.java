@@ -76,14 +76,19 @@ public abstract class TwitchAPI extends API
  
     public void sendUpTime()
     {
-        boolean updated = update();
+        boolean updated = false;
+        if (isUpdateDue())
+            updated = update();
 
         if (currentStream == null)
         {
             channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
         }
 
-        long uptime = System.currentTimeMillis() - currentStream.getCreatedAt().getTime();
+        long currentTime = System.currentTimeMillis();
+        long timeSinceLastUpdate = currentTime - getLastUpdateTime();
+        long uptime = currentTime - currentStream.getCreatedAt().getTime() + timeSinceLastUpdate;
+
         String replyString = channel.getNameNoTag() + " has been live for ";
         if (!updated)
             replyString += "at least ";

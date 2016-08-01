@@ -382,6 +382,7 @@ public class TwitchAI extends PircBot
             String user_target;
             String chan_sender = channel;
             String chan_target;
+            System.out.println("Operator: " + twitch_channel.getOperator(sender) + " Moderator: " + twitch_channel.getModerator(sender));
             boolean senderIsMod = twitch_channel.getOperator(sender) != null;
             float time;
             long timeStart, timeEnd;
@@ -558,7 +559,6 @@ public class TwitchAI extends PircBot
                     break;
                 case Command.RANK:
                     String currentGame = twitch_channel.getTwitchAPI().getCurrentGame();
-                    System.out.println("" + currentGame);
                     LogUtils.logMsg(currentGame);
                     if (currentGame.equals("Overwatch")) {
                         sendTwitchMessage(channel, "Overwatch Rank: " + twitch_channel.getBlizzAPI().getRank());
