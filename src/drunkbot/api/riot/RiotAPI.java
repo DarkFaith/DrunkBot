@@ -12,23 +12,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import drunkbot.CommandsCustom;
+import drunkbot.cmd.CommandsCustom;
 import drunkbot.api.API;
 import drunkbot.api.Storable;
 import drunkbot.twitchai.bot.TwitchChannel;
 import drunkbot.twitchai.util.Globals;
-import drunkbot.twitchai.util.StringUtils;
 import net.rithms.riot.api.RiotApi;
-import net.rithms.riot.api.RiotApiException;
 import net.rithms.riot.constant.QueueType;
 import net.rithms.riot.constant.Region;
-import net.rithms.riot.constant.Season;
 import net.rithms.riot.dto.League.League;
 import net.rithms.riot.dto.League.LeagueEntry;
 

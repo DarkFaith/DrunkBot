@@ -42,6 +42,7 @@ public class Main
         }
 
         twitchai.init_channels();
+        twitchai.init_reader();
 
         float time;
         long timeStart, timeEnd;

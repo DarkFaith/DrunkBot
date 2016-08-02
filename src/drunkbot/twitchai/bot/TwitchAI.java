@@ -9,7 +9,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.sun.javafx.binding.StringFormatter;
+import com.sun.org.apache.xpath.internal.operations.Number;
 import drunkbot.*;
+import drunkbot.cmd.*;
+import drunkbot.twitchai.AIReader;
 import drunkbot.twitchai.util.Globals;
 import drunkbot.twitchai.util.LogUtils;
 import org.jibble.pircbot.IrcException;
@@ -28,6 +32,7 @@ public class TwitchAI extends PircBot
     private boolean                  m_hasTags;
     private ArrayList<TwitchUser>    m_moderators;
     private ArrayList<TwitchChannel> m_channels;
+    private AIReader                 aiReader;
 
     public TwitchAI()
     {
@@ -100,6 +105,7 @@ public class TwitchAI extends PircBot
         }
     }
 
+
     public void init_channels()
     {
         logMsg("Attempting to join all registered channels...");
@@ -112,6 +118,20 @@ public class TwitchAI extends PircBot
             }
             joinToChannel(c);
         }
+    }
+
+    public void init_reader() {
+
+        if (m_channels.isEmpty())
+        {
+            logErr("No channels in list");
+            return;
+        }
+
+        logMsg("Starting local input reader for channel: " + m_channels.get(0));
+        // Input reader is set for first channel joined in list
+        aiReader = new AIReader(this, m_channels.get(0));
+        aiReader.init_input_reader();
     }
 
     public void joinToChannel(final String channel)
@@ -339,7 +359,6 @@ public class TwitchAI extends PircBot
     public void onMessage(String channel, String sender, String login, String hostname, String message)
     {
         logMsg("data/channels/" + channel + "/logs/", "/onMessage", "User: " + sender + " Hostname: " + hostname + " Message: " + message);
-
         TwitchChannel twitch_channel = getTwitchChannel(channel);
 
         /*
@@ -382,7 +401,7 @@ public class TwitchAI extends PircBot
             String user_target;
             String chan_sender = channel;
             String chan_target;
-            System.out.println("Operator: " + twitch_channel.getOperator(sender) + " Moderator: " + twitch_channel.getModerator(sender));
+            boolean senderIsBotAdmin = getOfflineModerator(sender) != null;
             boolean senderIsMod = twitch_channel.getOperator(sender) != null;
             float time;
             long timeStart, timeEnd;
@@ -408,253 +427,352 @@ public class TwitchAI extends PircBot
 //                }
 //            }
 
+            try
+            {
             /*
              * Commands available on channel
              */
-            switch (msg_command)
-            {
+                switch (msg_command)
+                {
 
-                case (Command.LAST_SONG):
-                    sendTwitchMessage(channel, twitch_channel.getMediaReader().getLastSong());
-                    break;
+                    case (Command.LAST_SONG):
+                        sendTwitchMessage(channel, twitch_channel.getMediaReader().getLastSong());
+                        break;
 
-                case (Command.SONG):
-                    sendTwitchMessage(channel, twitch_channel.getMediaReader().getCurrentSong());
-                    break;
+                    case (Command.SONG):
+                        sendTwitchMessage(channel, twitch_channel.getMediaReader().getCurrentSong());
+                        break;
 
-                case (Command.HELP):
-                    sendTwitchMessage(channel, "Commands=https://bitbucket.org/DarkFaith/drunkbot/wiki/Commands");
-                    break;
+                    case (Command.HELP):
+                        sendTwitchMessage(channel, "Commands=https://bitbucket.org/DarkFaith/drunkbot/wiki/Commands");
+                        break;
 
-                case (Command.RUNES):
-                    if (msg_array.length > 1)
-                        sendTwitchMessage(channel, CommandActions.getRunes(msg_array[1]));
-                    else
-                        sendTwitchMessage(channel, CommandActions.getRunes());
-                    break;
+                    // TODO: get runes from Riot API and print them in text form? (might not be worth it)
+                    case (Command.RUNES):
+                        if (msg_array.length > 1)
+                            sendTwitchMessage(channel, CommandActions.getRunes(msg_array[1]));
+                        else
+                            sendTwitchMessage(channel, CommandActions.getRunes());
+                        break;
 
-                case (Command.QUOTE):
-                    Quotes quotes = twitch_channel.getQuotes();
-                    boolean notAnInteger = false;
-                    // no param
-                    if (msg_array.length == 1)
-                    {
-                        sendTwitchMessage(channel, quotes.getRandom());
-                    }
-                    // integer param (quote index)
-                    else
-                    {
-                        try
+                    case (Command.QUOTE):
+                        Quotes quotes = twitch_channel.getQuotes();
+                        boolean notAnInteger = false;
+                        // no param
+                        if (msg_array.length == 1)
                         {
-                            int quoteIndex = Integer.parseInt(msg_array[1]);
-                            String quoteString = quotes.get(quoteIndex);
-                            if (!quoteString.isEmpty())
-                            {
-                                sendTwitchMessage(channel, quoteString);
-                            }
-                        } catch (NumberFormatException ex)
-                        {
-                            notAnInteger = true;
+                            sendTwitchMessage(channel, quotes.getRandom());
                         }
-
-                        // string param (mod only)
-                        if (notAnInteger && senderIsMod)
+                        // integer param (quote index)
+                        else
                         {
-                            if (msg_array[1].equals("add"))
+                            try
                             {
-                                StringBuilder quoteBuilder = new StringBuilder();
-                                for (int i = 2; i < msg_array.length; i++)
+                                int quoteIndex = Integer.parseInt(msg_array[1]);
+                                String quoteString = quotes.get(quoteIndex);
+                                if (!quoteString.isEmpty())
                                 {
-                                    quoteBuilder.append(msg_array[i]).append(" ");
+                                    sendTwitchMessage(channel, quoteString);
                                 }
-                                if (quoteBuilder.length() >= 1)
-                                {
-                                    if (quotes.add(quoteBuilder.toString()))
-                                    {
-                                        sendTwitchMessage(channel, "Quote added [" + quotes.getNumQuotes() + "]." +
-                                                "Use \"!quote\" to get a random quote or \"!quote #\" to get a specific quote");
-                                    }
-                                }
-                            } else if (msg_array[1].equals("remove"))
+                            } catch (NumberFormatException ex)
                             {
-                                try
-                                {
-                                    if (msg_array.length == 3)
-                                    {
-                                        int quoteIndex = Integer.parseInt(msg_array[2]);
-                                        String quoteToRemove = quotes.get(quoteIndex);
-                                        quotes.remove(quoteIndex);
-                                        sendTwitchMessage(channel, "Removed quote: " + quoteToRemove);
+                                notAnInteger = true;
+                            }
 
-                                    } else
+                            // string param (mod only)
+                            if (notAnInteger && senderIsMod)
+                            {
+                                if (msg_array[1].equals("add"))
+                                {
+                                    StringBuilder quoteBuilder = new StringBuilder();
+                                    for (int i = 2; i < msg_array.length; i++)
+                                    {
+                                        quoteBuilder.append(msg_array[i]).append(" ");
+                                    }
+                                    if (quoteBuilder.length() >= 1)
+                                    {
+                                        if (quotes.add(quoteBuilder.toString()))
+                                        {
+                                            sendTwitchMessage(channel, "Quote added [" + quotes.getNumQuotes() + "]." +
+                                                    "Use \"!quote\" to get a random quote or \"!quote #\" to get a specific quote");
+                                        }
+                                    }
+                                } else if (msg_array[1].equals("remove"))
+                                {
+                                    try
+                                    {
+                                        if (msg_array.length == 3)
+                                        {
+                                            int quoteIndex = Integer.parseInt(msg_array[2]);
+                                            String quoteToRemove = quotes.get(quoteIndex);
+                                            quotes.remove(quoteIndex);
+                                            sendTwitchMessage(channel, "Removed quote: " + quoteToRemove);
+
+                                        } else
+                                        {
+                                            sendTwitchMessage(channel, "Proper syntax is !quote remove index");
+                                        }
+                                    } catch (NumberFormatException ex)
                                     {
                                         sendTwitchMessage(channel, "Proper syntax is !quote remove index");
                                     }
-                                } catch (NumberFormatException ex)
+                                } else
                                 {
-                                    sendTwitchMessage(channel, "Proper syntax is !quote remove index");
+                                    sendTwitchMessage(channel, "You're too drunk to type commands correctly. Here's a complimentary quote instead:");
+                                    sendTwitchMessage(channel, quotes.getRandom());
                                 }
-                            } else
-                            {
-                                sendTwitchMessage(channel, "You're too drunk to type commands correctly. Here's a complimentary quote instead:");
-                                sendTwitchMessage(channel, quotes.getRandom());
                             }
                         }
-                    }
-                    break;
+                        break;
 
-                case Command.LIST_COMMANDS:
-                    String commandList = twitch_channel.getCustomCommands().getList();
-                    final int MAX_MSG_SIZE = 487;
-                    if (commandList.length() > MAX_MSG_SIZE)
-                    {
-                        String[] cmdParts = commandList.split(" ");
-                        StringBuilder builder = new StringBuilder(MAX_MSG_SIZE);
-                        builder.append("Commands are: ");
-                        for (int i = 0; i < cmdParts.length; i++)
+                    case Command.LIST_COMMANDS:
+                        String commandList = twitch_channel.getCustomCommands().getList();
+                        final int MAX_MSG_SIZE = 487;
+                        if (commandList.length() > MAX_MSG_SIZE)
                         {
-                            int cmdLength = cmdParts[i].length() + 1;
-                            if (cmdLength > MAX_MSG_SIZE - builder.length())
+                            String[] cmdParts = commandList.split(" ");
+                            StringBuilder builder = new StringBuilder(MAX_MSG_SIZE);
+                            builder.append("Commands are: ");
+                            for (int i = 0; i < cmdParts.length; i++)
+                            {
+                                int cmdLength = cmdParts[i].length() + 1;
+                                if (cmdLength > MAX_MSG_SIZE - builder.length())
+                                {
+                                    sendTwitchMessage(channel, builder.toString());
+                                    builder = new StringBuilder(MAX_MSG_SIZE);
+                                } else
+                                {
+                                    builder.append(cmdParts[i]).append(" ");
+                                }
+                            }
+                            if (builder.length() > 1)
                             {
                                 sendTwitchMessage(channel, builder.toString());
-                                builder = new StringBuilder(MAX_MSG_SIZE);
-                            } else {
-                                builder.append(cmdParts[i]).append(" ");
                             }
-                        }
-                        if (builder.length() > 1)
+                        } else
                         {
-                            sendTwitchMessage(channel, builder.toString());
+                            sendTwitchMessage(channel, "Commands are: " + twitch_channel.getCustomCommands().getList());
                         }
-                    } else
-                    {
-                        sendTwitchMessage(channel, "Commands are: " + twitch_channel.getCustomCommands().getList());
-                    }
-                    break;
+                        break;
 
-                case Command.MODS:
-                    StringBuilder chanMods = new StringBuilder();
-                    chanMods.append("Mods are: ");
-                    for (TwitchUser user : twitch_channel.getOperators())
-                    {
-                        chanMods.append(user.getName()).append(", ");
-                    }
-                    sendTwitchMessage(channel, chanMods.toString());
-                    break;
+                    case Command.MODS:
+                        StringBuilder chanMods = new StringBuilder();
+                        chanMods.append("Mods are: ");
+                        for (TwitchUser user : twitch_channel.getOperators())
+                        {
+                            chanMods.append(user.getName()).append(", ");
+                        }
+                        sendTwitchMessage(channel, chanMods.toString());
+                        break;
 
-                case Command.UPTIME:
-                    twitch_channel.sendUpTime();
-                    //sendTwitchMessage(channel, twitch_channel.sendUpTime());
-                    break;
+                    case Command.UPTIME:
+                        twitch_channel.sendUpTime();
+                        //sendTwitchMessage(channel, twitch_channel.sendUpTime());
+                        break;
 
-                case Command.CURRENT_GAME:
-                    sendTwitchMessage(channel, twitch_channel.getTwitchAPI().getCurrentGame());
-                    break;
+                    case Command.CURRENT_GAME:
+                        sendTwitchMessage(channel, twitch_channel.getTwitchAPI().getCurrentGame());
+                        break;
 
-                case Command.RANK_OVERWATCH:
-                    sendTwitchMessage(channel, twitch_channel.getBlizzAPI().getRank());
-                    break;
-                case Command.RANK_LOL:
-                    sendTwitchMessage(channel, twitch_channel.getRiotAPI().getHighestRank());
-                    break;
-                case Command.RANK:
-                    String currentGame = twitch_channel.getTwitchAPI().getCurrentGame();
-                    LogUtils.logMsg(currentGame);
-                    if (currentGame.equals("Overwatch")) {
-                        sendTwitchMessage(channel, "Overwatch Rank: " + twitch_channel.getBlizzAPI().getRank());
-                    } else {
-                        sendTwitchMessage(channel, "League Rank: " + twitch_channel.getRiotAPI().getHighestRank());
-                    }
-                    //TODO: Remove hardcoded rank
-                    //sendTwitchMessage(channel, twitch_channel.getRiotAPI().getRank("20445322"));
+                    case Command.RANK_OVERWATCH:
+                        sendTwitchMessage(channel, twitch_channel.getBlizzAPI().getRank());
+                        break;
+                    case Command.RANK_LOL:
+                        sendTwitchMessage(channel, twitch_channel.getRiotAPI().getHighestRank());
+                        break;
+                    case Command.RANK:
+                        String currentGame = twitch_channel.getTwitchAPI().getCurrentGame();
+                        LogUtils.logMsg(currentGame);
+                        if (currentGame.equals("Overwatch"))
+                        {
+                            sendTwitchMessage(channel, "Overwatch Rank: " + twitch_channel.getBlizzAPI().getRank());
+                        } else
+                        {
+                            sendTwitchMessage(channel, "League Rank: " + twitch_channel.getRiotAPI().getHighestRank());
+                        }
+                        //TODO: Remove hardcoded rank
+                        //sendTwitchMessage(channel, twitch_channel.getRiotAPI().getRank("20445322"));
 
 //                    if (twitch_channel.getCustomCommands().exists("!rank"))
 //                    {
 //                        sendTwitchMessage(channel, twitch_channel.getCustomCommands().get("!rank"));
 //                    }
-                    break;
-                case Command.CURRENCY:
-                    Currency userCurrency = twitch_channel.getCurrencyManager().getCurrency(user_sender);
-                    double currencyValue;
-                    if (userCurrency == null)
-                        currencyValue = 0;
-                    else
-                        currencyValue = userCurrency.get();
-                    String currencyString = Globals.g_currencyFormat.format(currencyValue);
-                    sendTwitchMessage(channel, user_sender + " has " + currencyString + " souls.");
-                    break;
-                // Mod Commands
-                case ModCommand.PURGE:
-                    if (!senderIsMod)
-                    {
                         break;
-                    }
-                    if (msg_array.length == 2)
-                    {
-                        String user = msg_array[1];
-                        ModCommandActions.purge(channel, user);
-                    }
-                    break;
-
-                case ModCommand.COMMAND:
-                    if (!senderIsMod)
-                    {
-                        break;
-                    }
-                    if (msg_array.length == 3)
-                    {
-                        String action = msg_array[1];
-                        String msgCmd = msg_array[2];
-                        if (action.equals("remove") || action.equals("delete") || action.equals("del"))
+                    case Command.CURRENCY: // souls
+                        if (senderIsBotAdmin && msg_array.length > 1)
                         {
-                            if (twitch_channel.getCustomCommands().remove(msgCmd))
+                            String user_string = "";
+                            String amount_string = "";
+                            if (msg_array.length > 3)
                             {
-                                sendTwitchMessage(channel, "Removed command: " + msgCmd);
-                            } else
+                                user_string = msg_array[2];
+                                amount_string = msg_array[3];
+                            }
+                            switch (msg_array[1])
                             {
-                                sendTwitchMessage(channel, "That shitty \"" + msgCmd + "\" command doesn't exist m8.");
+                                // give / take from users
+                                case "add":
+                                case "give":
+                                    Currency currency = twitch_channel.getCurrencyManager().getCurrency(user_string);
+                                    double amount = Double.parseDouble(amount_string);
+                                    currency.add(amount);
+                                    sendTwitchMessage(channel, String.format("%.2f souls given to " + user_string, amount));
+                                    break;
+
+                                case "remove":
+                                case "rem":
+                                case "rm":
+                                case "take":
+                                    currency = twitch_channel.getCurrencyManager().getCurrency(user_string);
+                                    amount = Double.parseDouble(amount_string);
+                                    currency.spend(amount);
+                                    sendTwitchMessage(channel, String.format("%.2f souls taken from " + user_string, amount));
+                                    break;
+
+                                case "giveall":
+                                    CurrencyManager currMgr = twitch_channel.getCurrencyManager();
+                                    if (amount_string.isEmpty())
+                                        amount = currMgr.getGenerateAmount();
+                                    else
+                                        amount = Double.parseDouble(amount_string);
+                                    boolean success = currMgr.giveToAll(amount);
+                                    if (success) {
+                                        sendTwitchMessage(channel, String.format("I can't hold all these souls! Here, everyone take %.2f souls each!", amount));
+                                    }
+                                    break;
+
+                                // set parameters
+                                case "set":
+                                    if (msg_array.length <= 3)
+                                    {
+                                        break;
+                                    }
+                                    String param = msg_array[2];
+                                    String value = msg_array[3];
+                                    currMgr = twitch_channel.getCurrencyManager();
+
+                                    switch (param)
+                                    {
+                                        // Delay (in ms) between soul generation
+                                        case "interval":
+                                            int oldInterval = currMgr.getGenerateInterval(); // in millis
+                                            int newInterval = Integer.parseInt(value); // in millis
+                                            currMgr.setGenerateInterval(newInterval);
+                                            if (newInterval != 0)
+                                            {
+                                                sendTwitchMessage(channel, String.format("Souls are now given every %d seconds (instead of %d)", newInterval / 1000, oldInterval / 1000));
+                                            } else
+                                            {
+                                                sendTwitchMessage(channel, "Souls are no longer being given out");
+                                            }
+                                            break;
+
+                                        // Amount of souls generated at the specified interval
+                                        case "amount":
+                                            int oldAmount = currMgr.getGenerateInterval();
+                                            int newAmount = Integer.parseInt(value);
+                                            currMgr.setGenerateAmount(newAmount);
+
+                                            if (newAmount != 0)
+                                            {
+                                                sendTwitchMessage(channel, String.format("%.2f Souls will be given (instead of %.2f)", newAmount, oldAmount));
+                                            } else
+                                            {
+                                                sendTwitchMessage(channel, "Souls are no longer being given out");
+                                            }
+                                            break;
+                                    }
+
+                                    break;
+                            }
+                        } else
+                        {
+                            Currency userCurrency = twitch_channel.getCurrencyManager().getCurrency(user_sender);
+                            double currencyValue;
+                            if (userCurrency == null)
+                                currencyValue = 0;
+                            else
+                                currencyValue = userCurrency.get();
+                            String currencyString = Globals.g_currencyFormat.format(currencyValue);
+                            sendTwitchMessage(channel, user_sender + " has " + currencyString + " souls.");
+                        }
+                        break;
+
+                    // Mod Commands
+                    case ModCommand.PURGE:
+                        if (!senderIsMod)
+                        {
+                            break;
+                        }
+                        if (msg_array.length == 2)
+                        {
+                            String user = msg_array[1];
+                            ModCommandActions.purge(channel, user);
+                        }
+                        break;
+
+                    case ModCommand.COMMAND:
+                        if (!senderIsMod)
+                        {
+                            break;
+                        }
+                        if (msg_array.length == 3)
+                        {
+                            String action = msg_array[1];
+                            String msgCmd = msg_array[2];
+                            if (action.equals("remove") || action.equals("delete") || action.equals("del"))
+                            {
+                                if (twitch_channel.getCustomCommands().remove(msgCmd))
+                                {
+                                    sendTwitchMessage(channel, "Removed command: " + msgCmd);
+                                } else
+                                {
+                                    sendTwitchMessage(channel, "That shitty \"" + msgCmd + "\" command doesn't exist m8.");
+                                }
+                            }
+                            // !command add [cmd] [msg]
+                        } else if (msg_array.length > 3)
+                        {
+                            String action = msg_array[1];
+                            String msgCmd = msg_array[2];
+                            if (action.equals("add") || action.equals("update"))
+                            {
+                                StringBuilder cmdTextBuilder = new StringBuilder();
+                                for (int i = 3; i < msg_array.length; i++)
+                                {
+                                    cmdTextBuilder.append(msg_array[i]).append(" ");
+                                }
+                                String cmdText = cmdTextBuilder.toString();
+
+                                CommandsCustom customCommands = twitch_channel.getCustomCommands();
+                                boolean exists = customCommands.exists(msgCmd);
+                                customCommands.add(msgCmd, cmdText);
+                                if (exists)
+                                {
+                                    sendTwitchMessage(channel, "Updated command: " + msgCmd);
+                                } else if (action.equals("add"))
+                                {
+                                    sendTwitchMessage(channel, "Added new command: " + msgCmd);
+                                } else
+                                {
+                                    sendTwitchMessage(channel, "Command \"" + msgCmd + "\" doesn't exist.");
+                                }
                             }
                         }
-                        // !command add [cmd] [msg]
-                    } else if (msg_array.length > 3)
-                    {
-                        String action = msg_array[1];
-                        String msgCmd = msg_array[2];
-                        if (action.equals("add") || action.equals("update"))
-                        {
-                            StringBuilder cmdTextBuilder = new StringBuilder();
-                            for (int i = 3; i < msg_array.length; i++)
-                            {
-                                cmdTextBuilder.append(msg_array[i]).append(" ");
-                            }
-                            String cmdText = cmdTextBuilder.toString();
+                        break;
 
-                            CommandsCustom customCommands = twitch_channel.getCustomCommands();
-                            boolean exists = customCommands.exists(msgCmd);
-                            customCommands.add(msgCmd, cmdText);
-                            if (exists)
-                            {
-                                sendTwitchMessage(channel, "Updated command: " + msgCmd);
-                            } else if (action.equals("add"))
-                            {
-                                sendTwitchMessage(channel, "Added new command: " + msgCmd);
-                            } else
-                            {
-                                sendTwitchMessage(channel, "Command \"" + msgCmd + "\" doesn't exist.");
-                            }
+                    default:
+                    {
+                        CommandsCustom customCmds = twitch_channel.getCustomCommands();
+                        if (customCmds.exists(msg_command))
+                        {
+                            sendTwitchMessage(channel, customCmds.get(msg_command));
                         }
                     }
                     break;
-
-                default:
-                {
-                    CommandsCustom customCmds = twitch_channel.getCustomCommands();
-                    if (customCmds.exists(msg_command))
-                    {
-                        sendTwitchMessage(channel, customCmds.get(msg_command));
-                    }
                 }
-                break;
+            } catch (NumberFormatException ex) {
+                LogUtils.logErr("OnMessage: " + ex.toString());
             }
 
 

@@ -1,4 +1,4 @@
-package drunkbot;
+package drunkbot.cmd;
 
 /**
  * Created by Kevin on 24/06/2016.

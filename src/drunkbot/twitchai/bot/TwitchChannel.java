@@ -4,6 +4,7 @@ import drunkbot.*;
 import drunkbot.api.blizzard.BlizzardAPI;
 import drunkbot.api.riot.RiotAPI;
 import drunkbot.api.twitch.TwitchAPI;
+import drunkbot.cmd.CommandsCustom;
 import drunkbot.twitchai.bot.channel.Settings;
 import drunkbot.twitchai.util.Globals;
 

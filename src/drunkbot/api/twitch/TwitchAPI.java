@@ -115,6 +115,11 @@ public abstract class TwitchAPI extends API
         }
         channel.sendMessage(replyString);
     }
+
+    public boolean isOnline() {
+        boolean updated = update();
+        return currentStream != null;
+    }
     
     public String getCurrentGame()
     {

@@ -2,6 +2,7 @@ package drunkbot;
 
 import drunkbot.twitchai.bot.TwitchChannel;
 import drunkbot.twitchai.bot.TwitchUser;
+import drunkbot.twitchai.util.LogUtils;
 
 import java.io.*;
 import java.util.*;
@@ -19,8 +20,10 @@ public abstract class CurrencyManager
 {
     private final HashMap<String, Currency> currencyMap = new HashMap<>();
     private int generateInterval = 1000 * 60 * 10; // 10 minutes in milliseconds
+    private double offlineGenerateAmount = 1.00;
     //private int generateInterval = 5000; // Every 5 seconds for testing
     private double generateAmount = 6.66;
+    private long timestampLastGenerate = System.currentTimeMillis();
     TwitchChannel channel;
 
     // Generate currency for all users every x minutes (default 10)
@@ -31,14 +34,35 @@ public abstract class CurrencyManager
         @Override
         public void run()
         {
-            // Detect new users
+            double amount;
+            if (channel.getTwitchAPI().isOnline()) {
+                amount = generateAmount;
+            } else {
+                amount = offlineGenerateAmount;
+            }
+
+            if (generateInterval > 0)
+            {
+                if (giveToAll(amount))
+                {
+                    timestampLastGenerate = System.currentTimeMillis();
+                    onCurrencyGenerated(amount);
+                }
+            }
+        }
+    };
+
+    public boolean giveToAll(double amount) {
+        if (amount > 0)
+        {
             if (channel == null)
-                return;
+                return false;
+            // Detect new users
             ArrayList<TwitchUser> users = channel.getUsers();
             if (users.isEmpty())
             {
-                System.out.println("User list is empty. No currency given");
-                return;
+                LogUtils.logMsg("User list is empty. No currency given");
+                return false;
             }
             for (int i = 0; i < users.size(); i++)
             {
@@ -50,11 +74,13 @@ public abstract class CurrencyManager
 
                 Currency userCurrency = currencyMap.get(userName);
                 // Increment user currency
-                userCurrency.add(generateAmount);
+                userCurrency.add(amount);
             }
-            onCurrencyGenerated(generateAmount);
+            return true;
         }
-    };
+        return false;
+    }
+
 
     public abstract void onCurrencyGenerated(double amountGenerated);
 
@@ -70,7 +96,21 @@ public abstract class CurrencyManager
 
     public void setGenerateAmount(double amount)
     {
+        if (amount < 0)
+            amount = 0;
         generateAmount = amount;
+    }
+
+    public double getOfflineGenerateAmount()
+    {
+        return offlineGenerateAmount;
+    }
+
+    public void setOfflineGenerateAmount(double amount)
+    {
+        if (amount < 0)
+            amount = 0;
+        offlineGenerateAmount = amount;
     }
 
     public int getGenerateInterval()
@@ -96,7 +136,18 @@ public abstract class CurrencyManager
         {
             currencyScheduledFuture.cancel(false);
         }
-        currencyScheduledFuture = currencyGenerateExecutor.scheduleAtFixedRate(currencyGenerateRunnable, generateInterval, generateInterval, TimeUnit.MILLISECONDS);
+
+        // time elapsed since last update counts in new interval instead of restarting
+        long timeSinceLastGenerate = System.currentTimeMillis() - timestampLastGenerate;;
+        long timeBeforeFirstGenerate = generateInterval - timeSinceLastGenerate;
+        if (generateInterval > 0)
+        {
+            currencyScheduledFuture = currencyGenerateExecutor.scheduleAtFixedRate(currencyGenerateRunnable, timeBeforeFirstGenerate, generateInterval, TimeUnit.MILLISECONDS);
+            LogUtils.logMsg("Currency scheduler started");
+        } else {
+            LogUtils.logMsg("Currency scheduler stopped (generate interval is 0 or less");
+        }
+
     }
 
     public void load()
@@ -113,7 +164,7 @@ public abstract class CurrencyManager
         {
             e.printStackTrace();
         }
-        System.out.println("Loaded currency");
+        LogUtils.logMsg("Loaded currency");
     }
 
     public void save()
@@ -131,7 +182,7 @@ public abstract class CurrencyManager
         } catch (IOException ex) {
             Logger.getLogger(Quotes.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println("Saved currency");
+        LogUtils.logMsg("Saved currency");
     }
 
     public Currency getCurrency(String user)
