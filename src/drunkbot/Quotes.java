@@ -7,6 +7,7 @@ package drunkbot;
 
 import drunkbot.twitchai.bot.TwitchAI;
 import drunkbot.twitchai.bot.TwitchChannel;
+import drunkbot.twitchai.util.LogUtils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -44,7 +45,7 @@ public class Quotes {
     }
     
     public void load() {
-        System.out.println("Loading quotes...");
+        LogUtils.logMsg("Loading quotes...");
         try (FileReader reader = new FileReader(channel.getDir() + "quotes.txt")) {
             BufferedReader br = new BufferedReader(reader);
             String line;
@@ -61,7 +62,7 @@ public class Quotes {
     }
     
     public void save() {
-        System.out.println("Saving quotes...");
+        LogUtils.logMsg("Saving quotes...");
         try (FileWriter writer = new FileWriter(channel.getDir() + "quotes.txt")) {
             for (String quote : quoteList) {
                 writer.write(quote + System.getProperty("line.separator"));
@@ -77,6 +78,27 @@ public class Quotes {
         String quoteString = quoteList.get(index) + " [" + (index + 1) + "]";
         
         return quoteString;
+    }
+
+    public String getRandom(String sample) {
+        String sampleLC = sample.toLowerCase();
+        ArrayList<String> matches = new ArrayList<>();
+        for (int i = 0; i < quoteList.size(); i++) {
+            String quote = quoteList.get(i);
+            String quoteLC = quote.toLowerCase();
+            if (quoteLC.contains(sampleLC)) {
+                matches.add(quote + String.format(" [%d]", i + 1));
+            }
+        }
+        if (matches.size() > 0)
+        {
+            int index = random.nextInt(matches.size());
+            String quoteString = matches.get(index);
+            return quoteString;
+        } else {
+            return null;
+        }
+
     }
     
     public boolean add(String s) {
@@ -112,4 +134,5 @@ public class Quotes {
     public int getNumQuotes() {
         return quoteList.size();
     }
+
 }

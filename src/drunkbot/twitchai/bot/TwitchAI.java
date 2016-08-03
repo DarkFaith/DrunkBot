@@ -480,7 +480,9 @@ public class TwitchAI extends PircBot
                             }
 
                             // string param (mod only)
-                            if (notAnInteger && senderIsMod)
+                            String param = msg_array[1];
+
+                            if (notAnInteger && senderIsMod && (param.equals("add") || param.equals("remove")))
                             {
                                 if (msg_array[1].equals("add"))
                                 {
@@ -520,6 +522,27 @@ public class TwitchAI extends PircBot
                                 {
                                     sendTwitchMessage(channel, "You're too drunk to type commands correctly. Here's a complimentary quote instead:");
                                     sendTwitchMessage(channel, quotes.getRandom());
+                                }
+                            } else if (notAnInteger) {
+                                // Get random quote with pattern (case insensitive)
+                                StringBuilder quoteTextBuilder = new StringBuilder();
+                                for (int i = 1; i < msg_array.length; i++)
+                                {
+                                    quoteTextBuilder.append(msg_array[i]);
+                                    if (i == msg_array.length - 1) {
+                                         continue;
+                                    } else {
+                                        quoteTextBuilder.append(" ");
+                                    }
+                                }
+                                String quoteSample = quoteTextBuilder.toString();
+                                String quote = quotes.getRandom(quoteSample);
+                                if (quote == null) {
+                                    sendTwitchMessage(channel, "No quote found with that string pattern so here's a random one!");
+                                    sendTwitchMessage(channel, quotes.getRandom());
+                                } else
+                                {
+                                    sendTwitchMessage(channel, quotes.getRandom(quoteSample));
                                 }
                             }
                         }
@@ -606,13 +629,9 @@ public class TwitchAI extends PircBot
                             {
                                 sendTwitchMessage(channel, String.format("%s has %.2f souls.", userKey, currencyManager.getCurrency(userKey).get()));
                             } else if (senderIsBotAdmin && msg_array.length > 3) {
-                                String user_string = "";
-                                String amount_string = "";
-//                                if (msg_array.length > 3)
-//                                {
-                                    user_string = msg_array[2];
-                                    amount_string = msg_array[3];
-//                                }
+
+                                String user_string = msg_array[2];
+                                String amount_string = msg_array[3];
 
                                 switch (msg_array[1]) // command
                                 {
