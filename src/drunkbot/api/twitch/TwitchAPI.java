@@ -6,18 +6,11 @@
 package drunkbot.api.twitch;
 
 import com.mb3364.twitch.api.Twitch;
-import com.mb3364.twitch.api.handlers.ChannelResponseHandler;
-import com.mb3364.twitch.api.handlers.StreamResponseHandler;
 import com.mb3364.twitch.api.models.Channel;
 import com.mb3364.twitch.api.models.Stream;
-import com.sun.org.apache.xerces.internal.impl.Constants;
 import drunkbot.api.API;
 import drunkbot.twitchai.bot.TwitchChannel;
 import drunkbot.twitchai.util.LogUtils;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static drunkbot.twitchai.util.LogUtils.logMsg;
 
@@ -31,6 +24,7 @@ public abstract class TwitchAPI extends API
     private String channelName = "";
     //private String baseURL = "https://api.twitch.tv/";
     TwitchChannel channel;
+    Stream lastValidStream = null;
     Stream currentStream = null;
     Channel currentChannel = null;
 //    private ScheduledExecutorService updateTwitchAPI = Executors.newSingleThreadScheduledExecutor();
@@ -41,7 +35,7 @@ public abstract class TwitchAPI extends API
 //        {
 //            //twitch.channels().get(channelName, channelResponseHandler);
 //
-//            //System.out.println("Stream loaded: " + currentStream.getChannel().getDisplayName());
+//            //System.out.println("Stream loaded: " + lastValidStream.getChannel().getDisplayName());
 //        }
 //    };
     
@@ -61,13 +55,13 @@ public abstract class TwitchAPI extends API
     @Override
     protected boolean update()
     {
-        Stream stream = twitch.streams().get(channelName);
-        if (stream == null)
+        currentStream = twitch.streams().get(channelName);
+        if (currentStream == null)
         {
-            LogUtils.logErr("data/channels/" + channel.getName() + "/logs/", "/api", "Failed to update stream object. Twitch API may be down");
+            LogUtils.logErr("data/channels/" + channel.getName() + "/logs/", "/api", "Failed to update stream object. Stream is offline or Twitch API may be down");
             return false;
         } else {
-            currentStream = stream;
+            lastValidStream = currentStream;
             setLastUpdateTime();
             LogUtils.logMsg("data/channels/" + channel.getName() + "/logs/", "/api", "Successfully updated stream object");
             return true;
@@ -80,14 +74,14 @@ public abstract class TwitchAPI extends API
         if (isUpdateDue())
             updated = update();
 
-        if (currentStream == null)
+        if (lastValidStream == null)
         {
             channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
         }
 
         long currentTime = System.currentTimeMillis();
         long timeSinceLastUpdate = currentTime - getLastUpdateTime();
-        long uptime = currentTime - currentStream.getCreatedAt().getTime() + timeSinceLastUpdate;
+        long uptime = currentTime - lastValidStream.getCreatedAt().getTime() + timeSinceLastUpdate;
 
         String replyString = channel.getNameNoTag() + " has been live for ";
         if (!updated)
@@ -127,10 +121,10 @@ public abstract class TwitchAPI extends API
         boolean updated = update();
         LogUtils.logMsg("GetCurrentGame: " + updated);
 
-        if (currentStream == null)
+        if (lastValidStream == null)
             return "No game detected.";
 
-        String game = currentStream.getGame();
+        String game = lastValidStream.getGame();
         if (game != null && !game.isEmpty())
             return game;
         else

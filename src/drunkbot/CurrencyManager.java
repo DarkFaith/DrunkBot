@@ -190,4 +190,20 @@ public abstract class CurrencyManager
         return currencyMap.get(user);
     }
 
+    public boolean userExists(String user) {
+        for (String currencyUser : currencyMap.keySet()) {
+            return user.equalsIgnoreCase(currencyUser);
+        }
+        return false;
+    }
+
+    public String getUserKey(String user) {
+        for (String currencyUser : currencyMap.keySet()) {
+            if (currencyUser.equalsIgnoreCase(user)) {
+                return currencyUser;
+            }
+        }
+        return null;
+    }
+
 }

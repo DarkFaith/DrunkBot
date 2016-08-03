@@ -599,91 +599,100 @@ public class TwitchAI extends PircBot
 //                    }
                         break;
                     case Command.CURRENCY: // souls
-                        if (senderIsBotAdmin && msg_array.length > 1)
-                        {
-                            String user_string = "";
-                            String amount_string = "";
-                            if (msg_array.length > 3)
+                        CurrencyManager currencyManager = twitch_channel.getCurrencyManager();
+                        if (msg_array.length > 1) {
+                            String userKey = currencyManager.getUserKey(msg_array[1]);
+                            if (senderIsMod && msg_array.length == 2 && userKey != null)
                             {
-                                user_string = msg_array[2];
-                                amount_string = msg_array[3];
-                            }
-                            switch (msg_array[1])
-                            {
-                                // give / take from users
-                                case "add":
-                                case "give":
-                                    Currency currency = twitch_channel.getCurrencyManager().getCurrency(user_string);
-                                    double amount = Double.parseDouble(amount_string);
-                                    currency.add(amount);
-                                    sendTwitchMessage(channel, String.format("%.2f souls given to " + user_string, amount));
-                                    break;
+                                sendTwitchMessage(channel, String.format("%s has %.2f souls.", userKey, currencyManager.getCurrency(userKey).get()));
+                            } else if (senderIsBotAdmin && msg_array.length > 3) {
+                                String user_string = "";
+                                String amount_string = "";
+//                                if (msg_array.length > 3)
+//                                {
+                                    user_string = msg_array[2];
+                                    amount_string = msg_array[3];
+//                                }
 
-                                case "remove":
-                                case "rem":
-                                case "rm":
-                                case "take":
-                                    currency = twitch_channel.getCurrencyManager().getCurrency(user_string);
-                                    amount = Double.parseDouble(amount_string);
-                                    currency.spend(amount);
-                                    sendTwitchMessage(channel, String.format("%.2f souls taken from " + user_string, amount));
-                                    break;
-
-                                case "giveall":
-                                    CurrencyManager currMgr = twitch_channel.getCurrencyManager();
-                                    if (amount_string.isEmpty())
-                                        amount = currMgr.getGenerateAmount();
-                                    else
-                                        amount = Double.parseDouble(amount_string);
-                                    boolean success = currMgr.giveToAll(amount);
-                                    if (success) {
-                                        sendTwitchMessage(channel, String.format("I can't hold all these souls! Here, everyone take %.2f souls each!", amount));
-                                    }
-                                    break;
-
-                                // set parameters
-                                case "set":
-                                    if (msg_array.length <= 3)
-                                    {
+                                switch (msg_array[1]) // command
+                                {
+                                    // admin commands to add, give, remove currency from other users
+                                    case "add":
+                                    case "give":
+                                        Currency currency = currencyManager.getCurrency(user_string);
+                                        double amount = Double.parseDouble(amount_string);
+                                        currency.add(amount);
+                                        sendTwitchMessage(channel, String.format("%.2f souls given to " + user_string, amount));
                                         break;
-                                    }
-                                    String param = msg_array[2];
-                                    String value = msg_array[3];
-                                    currMgr = twitch_channel.getCurrencyManager();
 
-                                    switch (param)
-                                    {
-                                        // Delay (in ms) between soul generation
-                                        case "interval":
-                                            int oldInterval = currMgr.getGenerateInterval(); // in millis
-                                            int newInterval = Integer.parseInt(value); // in millis
-                                            currMgr.setGenerateInterval(newInterval);
-                                            if (newInterval != 0)
-                                            {
-                                                sendTwitchMessage(channel, String.format("Souls are now given every %d seconds (instead of %d)", newInterval / 1000, oldInterval / 1000));
-                                            } else
-                                            {
-                                                sendTwitchMessage(channel, "Souls are no longer being given out");
-                                            }
-                                            break;
+                                    case "remove":
+                                    case "rem":
+                                    case "rm":
+                                    case "take":
+                                        currency = currencyManager.getCurrency(user_string);
+                                        amount = Double.parseDouble(amount_string);
+                                        currency.spend(amount);
+                                        sendTwitchMessage(channel, String.format("%.2f souls taken from " + user_string, amount));
+                                        break;
 
-                                        // Amount of souls generated at the specified interval
-                                        case "amount":
-                                            int oldAmount = currMgr.getGenerateInterval();
-                                            int newAmount = Integer.parseInt(value);
-                                            currMgr.setGenerateAmount(newAmount);
+                                    case "giveall":
+                                        if (msg_array.length > 2)
+                                        {
+                                            amount_string = msg_array[2];
+                                        }
+                                        if (amount_string.isEmpty())
+                                            amount = currencyManager.getGenerateAmount();
+                                        else
+                                            amount = Double.parseDouble(amount_string);
+                                        boolean success = currencyManager.giveToAll(amount);
+                                        if (success)
+                                        {
+                                            sendTwitchMessage(channel, String.format("I can't hold all these souls! Here, everyone take %.2f souls each!", amount));
+                                        }
+                                        break;
 
-                                            if (newAmount != 0)
-                                            {
-                                                sendTwitchMessage(channel, String.format("%.2f Souls will be given (instead of %.2f)", newAmount, oldAmount));
-                                            } else
-                                            {
-                                                sendTwitchMessage(channel, "Souls are no longer being given out");
-                                            }
-                                            break;
-                                    }
+                                    // set parameters
+                                    case "set":
+//                                        if (msg_array.length <= 3)
+//                                        {
+//                                            break;
+//                                        }
+                                        String param = msg_array[2];
+                                        String value = msg_array[3];
 
-                                    break;
+                                        switch (param)
+                                        {
+                                            // Delay (in ms) between soul generation
+                                            case "interval":
+                                                int oldInterval = currencyManager.getGenerateInterval(); // in millis
+                                                int newInterval = Integer.parseInt(value); // in millis
+                                                currencyManager.setGenerateInterval(newInterval);
+                                                if (newInterval != 0)
+                                                {
+                                                    sendTwitchMessage(channel, String.format("Souls are now given every %d seconds (instead of %d)", newInterval / 1000, oldInterval / 1000));
+                                                } else
+                                                {
+                                                    sendTwitchMessage(channel, "Souls are no longer being given out");
+                                                }
+                                                break;
+
+                                            // Amount of souls generated at the specified interval
+                                            case "amount":
+                                                int oldAmount = currencyManager.getGenerateInterval();
+                                                int newAmount = Integer.parseInt(value);
+                                                currencyManager.setGenerateAmount(newAmount);
+
+                                                if (newAmount != 0)
+                                                {
+                                                    sendTwitchMessage(channel, String.format("%.2f Souls will be given (instead of %.2f)", newAmount, oldAmount));
+                                                } else
+                                                {
+                                                    sendTwitchMessage(channel, "Souls are no longer being given out");
+                                                }
+                                                break;
+                                        }
+                                        break;
+                                }
                             }
                         } else
                         {
