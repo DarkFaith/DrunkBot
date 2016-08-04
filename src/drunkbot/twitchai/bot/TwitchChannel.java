@@ -5,12 +5,13 @@ import drunkbot.api.blizzard.BlizzardAPI;
 import drunkbot.api.riot.RiotAPI;
 import drunkbot.api.twitch.TwitchAPI;
 import drunkbot.cmd.CommandsCustom;
+import drunkbot.CurrencyManager;
 import drunkbot.twitchai.bot.channel.Settings;
 import drunkbot.twitchai.util.Globals;
 
 import java.util.ArrayList;
 
-public abstract class TwitchChannel
+public abstract class TwitchChannel implements TwitchChannelListener
 {
     private Settings settings = new Settings();
     private String m_name;
@@ -105,11 +106,13 @@ public abstract class TwitchChannel
     public void addUser(TwitchUser user)
     {
         m_users.add(user);
+        onUserAdded();
     }
 
     public void delUser(TwitchUser user)
     {
         m_users.remove(user);
+        onUserRemoved();
     }
 
     public ArrayList<TwitchUser> getUsers()

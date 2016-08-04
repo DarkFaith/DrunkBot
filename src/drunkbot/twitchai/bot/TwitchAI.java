@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.sun.javafx.binding.StringFormatter;
-import com.sun.org.apache.xpath.internal.operations.Number;
 import drunkbot.*;
 import drunkbot.cmd.*;
+import drunkbot.Currency;
+import drunkbot.CurrencyManager;
 import drunkbot.twitchai.AIReader;
 import drunkbot.twitchai.util.Globals;
 import drunkbot.twitchai.util.LogUtils;
@@ -140,6 +140,18 @@ public class TwitchAI extends PircBot
         joinChannel(channel);
         m_channels.add(new TwitchChannel(channel)
         {
+
+            @Override
+            public void onUserAdded()
+            {
+
+            }
+
+            @Override
+            public void onUserRemoved()
+            {
+
+            }
 
             @Override
             public void sendMessage(String message)
@@ -628,10 +640,12 @@ public class TwitchAI extends PircBot
                             if (senderIsMod && msg_array.length == 2 && userKey != null)
                             {
                                 sendTwitchMessage(channel, String.format("%s has %.2f souls.", userKey, currencyManager.getCurrency(userKey).get()));
-                            } else if (senderIsBotAdmin && msg_array.length > 3) {
+                            } else if (senderIsBotAdmin && msg_array.length > 2) {
 
                                 String user_string = msg_array[2];
-                                String amount_string = msg_array[3];
+                                String amount_string = "";
+                                if (msg_array.length > 3)
+                                    amount_string = msg_array[3];
 
                                 switch (msg_array[1]) // command
                                 {
