@@ -2,7 +2,6 @@
 /dist/
 /out/
 /data/
-/*.log.*
 .ini
 *.properties
 config.ini
@@ -22,3 +21,4 @@ drunklog*
 test/
 .idea/workspace.xml
 DrunkBot.jar
+data - Copy/

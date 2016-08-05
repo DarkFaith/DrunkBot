@@ -24,9 +24,15 @@ public abstract class TwitchChannel implements TwitchChannelListener
     private CurrencyManager currencyManager = new CurrencyManager(this)
     {
         @Override
-        public void onCurrencyGenerated(double amountGenerated)
+        public void onCurrencyGenerated(double amountGenerated, double bonusGenerated)
         {
-            sendMessage("Everyone here gets " + Globals.g_currencyFormat.format(amountGenerated) + " souls for being awesome!");
+            if (bonusGenerated > 0)
+            {
+                sendMessage("Everyone here gets " + Globals.g_currencyFormat.format(amountGenerated)
+                        + " (+" + Globals.g_currencyFormat.format(bonusGenerated) + ") souls for being awesome! (+2 souls for every 5 viewers)");
+            } else {
+                sendMessage("Everyone here gets " + Globals.g_currencyFormat.format(amountGenerated) + " souls for being awesome!");
+            }
             currencyManager.save();
         }
     };
@@ -107,12 +113,14 @@ public abstract class TwitchChannel implements TwitchChannelListener
     {
         m_users.add(user);
         onUserAdded();
+        currencyManager.onUserAdded();
     }
 
     public void delUser(TwitchUser user)
     {
         m_users.remove(user);
         onUserRemoved();
+        currencyManager.onUserRemoved();
     }
 
     public ArrayList<TwitchUser> getUsers()
@@ -263,5 +271,17 @@ public abstract class TwitchChannel implements TwitchChannelListener
     public BlizzardAPI getBlizzAPI()
     {
         return blizzAPI;
+    }
+
+    @Override
+    public void onUserAdded()
+    {
+        currencyManager.onUserAdded();
+    }
+
+    @Override
+    public void onUserRemoved()
+    {
+        currencyManager.onUserRemoved();
     }
 }

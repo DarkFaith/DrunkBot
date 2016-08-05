@@ -140,19 +140,6 @@ public class TwitchAI extends PircBot
         joinChannel(channel);
         m_channels.add(new TwitchChannel(channel)
         {
-
-            @Override
-            public void onUserAdded()
-            {
-
-            }
-
-            @Override
-            public void onUserRemoved()
-            {
-
-            }
-
             @Override
             public void sendMessage(String message)
             {
@@ -711,8 +698,8 @@ public class TwitchAI extends PircBot
 
                                             // Amount of souls generated at the specified interval
                                             case "amount":
-                                                int oldAmount = currencyManager.getGenerateInterval();
-                                                int newAmount = Integer.parseInt(value);
+                                                double oldAmount = currencyManager.getGenerateAmount();
+                                                double newAmount = Double.parseDouble(value);
                                                 currencyManager.setGenerateAmount(newAmount);
 
                                                 if (newAmount != 0)

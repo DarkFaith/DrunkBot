@@ -1,6 +1,7 @@
 package drunkbot;
 
 import drunkbot.twitchai.bot.TwitchChannel;
+import drunkbot.twitchai.bot.TwitchChannelListener;
 import drunkbot.twitchai.bot.TwitchUser;
 import drunkbot.twitchai.util.LogUtils;
 
@@ -16,16 +17,17 @@ import java.util.logging.Logger;
 /**
  * Created by Kevin on 28/06/2016.
  */
-public abstract class CurrencyManager
+public abstract class CurrencyManager implements TwitchChannelListener
 {
     private final HashMap<String, Currency> currencyMap = new HashMap<>();
     private int generateInterval = 1000 * 60 * 10; // 10 minutes in milliseconds
     private double offlineGenerateAmount = 1.00;
     //private int generateInterval = 5000; // Every 5 seconds for testing
-    private double generateAmount = 6.66;
+    private double generateAmount = 4.00;
     private long timestampLastGenerate = System.currentTimeMillis();
     TwitchChannel channel;
 
+    private int maxNumUsers = 0;
     // Generate currency for all users every x minutes (default 10)
     private ScheduledFuture<?> currencyScheduledFuture = null;
     private ScheduledExecutorService currencyGenerateExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -35,8 +37,12 @@ public abstract class CurrencyManager
         public void run()
         {
             double amount;
+            double bonusGenerateAmount = 0;
             if (channel.getTwitchAPI().isOnline()) {
-                amount = generateAmount;
+                //bonusGenerateAmount = 2 * maxNumUsers/5;
+                bonusGenerateAmount = 0; // not enabled
+                amount = generateAmount + bonusGenerateAmount;
+                maxNumUsers = channel.getUsers().size();
             } else {
                 amount = offlineGenerateAmount;
             }
@@ -46,7 +52,7 @@ public abstract class CurrencyManager
                 if (giveToAll(amount))
                 {
                     timestampLastGenerate = System.currentTimeMillis();
-                    onCurrencyGenerated(amount);
+                    onCurrencyGenerated(amount, bonusGenerateAmount);
                 }
             }
         }
@@ -82,7 +88,7 @@ public abstract class CurrencyManager
     }
 
 
-    public abstract void onCurrencyGenerated(double amountGenerated);
+    public abstract void onCurrencyGenerated(double amountGenerated, double bonusGenerated);
 
     public CurrencyManager(TwitchChannel channel)
     {
@@ -206,4 +212,17 @@ public abstract class CurrencyManager
         return null;
     }
 
+
+    @Override
+    public void onUserAdded()
+    {
+        int numUsers = channel.getUsers().size();
+        if (maxNumUsers < channel.getUsers().size())
+            maxNumUsers = numUsers;
+    }
+
+    @Override
+    public void onUserRemoved()
+    {
+    }
 }
