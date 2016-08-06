@@ -82,11 +82,11 @@ public abstract class TwitchAPI extends API
 
         long currentTime = System.currentTimeMillis();
         long timeSinceLastUpdate = currentTime - getLastUpdateTime();
-        long uptime = currentTime - lastValidStream.getCreatedAt().getTime() + timeSinceLastUpdate;
+        long uptime = currentTime - (lastValidStream.getCreatedAt().getTime() + timeSinceLastUpdate);
 
         String replyString = channel.getNameNoTag() + " has been live for ";
-        if (!updated)
-            replyString += "at least ";
+//        if (!updated)
+//            replyString += "at least ";
         if (uptime < 10000 && uptime >= 0)
         {
             channel.sendMessage("Just started! Calm yo tits!");
