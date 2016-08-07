@@ -20,6 +20,7 @@ import drunkbot.api.API;
 import drunkbot.api.Storable;
 import drunkbot.twitchai.bot.TwitchChannel;
 import drunkbot.twitchai.util.Globals;
+import drunkbot.twitchai.util.LogUtils;
 import net.rithms.riot.api.RiotApi;
 import net.rithms.riot.constant.QueueType;
 import net.rithms.riot.constant.Region;
@@ -50,7 +51,7 @@ public abstract class RiotAPI extends API implements Storable
     }
 
     public boolean load() {
-        System.out.println("Loading accounts from: " + getChannel().getDir() + "accounts.txt");
+        LogUtils.logMsg("Loading accounts from: " + getChannel().getDir() + "accounts.txt");
         try (FileReader fr = new FileReader(getChannel().getDir() + "accounts.txt"); BufferedReader br = new BufferedReader(fr))
         {
             String accountName;

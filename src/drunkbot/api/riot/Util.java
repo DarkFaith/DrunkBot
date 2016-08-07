@@ -1,6 +1,5 @@
 package drunkbot.api.riot;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
 
 /**
  * Created by Kevin on 26/07/2016.
@@ -26,13 +25,13 @@ public class Util
         // Compare divisions
         RankDivision div1 = RankDivision.valueOf(rank1Split[1]);
         RankDivision div2 = RankDivision.valueOf(rank2Split[1]);
-        int divCompare = tier1.compareTo(tier2);
+        int divCompare = div1.compareTo(div2);
         if (divCompare != 0)
             return div1.compareTo(div2);
 
         // Compare LP
-        rank1Split[2].replaceAll("LP", "");
-        rank2Split[2].replaceAll("LP", "");
+        rank1Split[2] = rank1Split[2].replaceAll("LP", "");
+        rank2Split[2] = rank2Split[2].replaceAll("LP", "");
         int lp1 = Integer.parseInt(rank1Split[2]);
         int lp2 = Integer.parseInt(rank2Split[2]);
         if (lp1 > lp2)
