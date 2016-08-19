@@ -25,6 +25,8 @@ public class Globals
     // APIS
     public static String           g_api_twitch_oauth;
     public static String           g_api_riot_oauth;
+    public static String           g_api_nightbot_client_id;
+    public static String           g_api_nightbot_client_secret;
 
     // Time & Date
     public static DateFormat       g_datetimeformat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");

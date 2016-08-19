@@ -81,7 +81,9 @@ public class ConfUtils
             g_bot_oauth = String.valueOf(p.getProperty("g_bot_oauth"));
             g_bot_chan = String.valueOf(p.getProperty("g_bot_chan"));
             g_api_riot_oauth = String.valueOf(p.getProperty("g_api_riot_oauth"));
-            g_api_twitch_oauth  =String.valueOf(p.getProperty("g_api_twitch_oauth"));
+            g_api_twitch_oauth = String.valueOf(p.getProperty("g_api_twitch_oauth"));
+            g_api_nightbot_client_id = String.valueOf(p.getProperty("g_api_nightbot_client_id"));
+            g_api_nightbot_client_secret = String.valueOf(p.getProperty("g_api_nightbot_client_secret"));
 
             // Close the inputstream object
             i.close();

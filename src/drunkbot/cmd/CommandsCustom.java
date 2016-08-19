@@ -6,6 +6,8 @@
 package drunkbot.cmd;
 
 import drunkbot.twitchai.bot.TwitchChannel;
+import drunkbot.twitchai.bot.channel.VariableParser;
+import drunkbot.twitchai.util.LogUtils;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -41,7 +43,7 @@ public class CommandsCustom {
     }
 
     public void load() {
-        System.out.println("Loading custom commands...");
+        LogUtils.logMsg("Loading custom commands...");
 //        try (FileInputStream reader = new FileInputStream("commands.ser"); ObjectInputStream in = new ObjectInputStream(reader)) {
 //            commandList = (HashMap) in.readObject();
 //        } catch (FileNotFoundException ex) {
@@ -69,7 +71,7 @@ public class CommandsCustom {
     }
     
     public void save() {
-        System.out.println("Saving custom commands...");
+        LogUtils.logMsg("Saving custom commands...");
 //        try (FileOutputStream writer = new FileOutputStream("commands.ser"); ObjectOutputStream out = new ObjectOutputStream(writer)) {
 ////            out.writeObject(commandList);
 //            
@@ -115,10 +117,13 @@ public class CommandsCustom {
     }
     
     public String get(String key) {
+        String message;
         if (key.startsWith("!"))
-            return commandList.get(key);
+            message = commandList.get(key);
         else
-            return commandList.get("!" + key);
+            message = commandList.get("!" + key);
+        message = VariableParser.parse(channel, message);
+        return message;
     }
     
     public String getList() {

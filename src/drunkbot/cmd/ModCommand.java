@@ -13,4 +13,5 @@ public interface ModCommand
     String PURGE = "purge";
     String QUOTE = "quote";
     String COMMAND = "command";
+    String TIMER = "timer"; // timer commands
 }

@@ -401,7 +401,7 @@ public class TwitchAI extends PircBot
             String chan_sender = channel;
             String chan_target;
             boolean senderIsBotAdmin = getOfflineModerator(sender) != null;
-            boolean senderIsMod = twitch_channel.getOperator(sender) != null;
+            boolean senderIsMod = twitch_channel.getOperator(sender) != null || senderIsBotAdmin;
             float time;
             long timeStart, timeEnd;
 
@@ -789,7 +789,49 @@ public class TwitchAI extends PircBot
                             }
                         }
                         break;
+                    case ModCommand.TIMER:
+                        if (!senderIsMod)
+                        {
+                            break;
+                        }
+                        if (msg_array.length == 3)
+                        {
+                            String action = msg_array[1];
+                            String cmdKey = msg_array[2];
 
+                            // Check if command key exists
+                            if (twitch_channel.getCustomCommands().exists(cmdKey))
+                            {
+                                // Add command key from custom commands to the interval messages
+                                if (action.equals("add"))
+                                {
+                                    boolean added = twitch_channel.getMessageManager().addCommand(cmdKey);
+                                    if (added) {
+                                        sendTwitchMessage(channel, cmdKey + " was successfully added to the timer messages");
+                                    } else {
+                                        sendTwitchMessage(channel, cmdKey + " is already in the timer messages you doof!");
+                                    }
+                                } else if (action.equals("remove") || action.equals("delete") || action.equals("del") || action.equals("rm") || action.equals("rem")) {
+                                    boolean removed = twitch_channel.getMessageManager().removeCommand(cmdKey);
+                                    if (removed) {
+                                        sendTwitchMessage(channel, cmdKey + " was successfully removed from the timer messages");
+                                    } else {
+                                        sendTwitchMessage(channel, "Either I'm too incompetent to remove it or... y'know... it wasn't a timer message in the first place. You suck.");
+                                    }
+                                }
+                            } else if (action.equals("list")) {
+                                sendTwitchMessage(channel, "Timer messages are: " + twitch_channel.getMessageManager().getList());
+                            } else if (action.equals("interval")) {
+                                String intervalString = cmdKey;
+                                int interval = Integer.parseInt(intervalString);
+                                int oldInterval = twitch_channel.getMessageManager().getRunInterval()/1000;
+                                twitch_channel.getMessageManager().setRunInterval(interval);
+                                sendTwitchMessage(channel, "Timer messages will now be displayed every " + interval + " seconds. (Was " + oldInterval + " seconds)");
+                            }
+                        } else if (msg_array.length == 1) {
+                            sendTwitchMessage(channel, "Timer messages are: " + twitch_channel.getMessageManager().getList());
+                        }
+                        break;
                     default:
                     {
                         CommandsCustom customCmds = twitch_channel.getCustomCommands();

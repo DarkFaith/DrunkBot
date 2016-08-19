@@ -21,6 +21,7 @@ public abstract class TwitchChannel implements TwitchChannelListener
     private CommandsCustom commandsCustom = new CommandsCustom(this);
     private MediaReader mediaReader = new MediaReader(this);
     private Quotes quotes = new Quotes(this);
+    private MessageManager messageManager = new MessageManager(this);
     private CurrencyManager currencyManager = new CurrencyManager(this)
     {
         @Override
@@ -74,6 +75,7 @@ public abstract class TwitchChannel implements TwitchChannelListener
         riotAPI.load();
         twitchAPI.init();
         currencyManager.init();
+        messageManager.init();
     }
     {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
@@ -267,6 +269,8 @@ public abstract class TwitchChannel implements TwitchChannelListener
     {
         return currencyManager;
     }
+
+    public MessageManager getMessageManager() { return messageManager; }
 
     public BlizzardAPI getBlizzAPI()
     {

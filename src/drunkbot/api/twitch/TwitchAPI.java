@@ -21,9 +21,8 @@ import static drunkbot.twitchai.util.LogUtils.logMsg;
 public abstract class TwitchAPI extends API
 {
     private Twitch twitch = new Twitch();
-    private String channelName = "";
+
     //private String baseURL = "https://api.twitch.tv/";
-    TwitchChannel channel;
     Stream lastValidStream = null;
     Stream currentStream = null;
     Channel currentChannel = null;
@@ -42,12 +41,11 @@ public abstract class TwitchAPI extends API
     public TwitchAPI(TwitchChannel channel)
     {
         super(channel);
-        this.channel = channel;
     }
 
     public void init()
     {
-        this.channelName = channel.getNameNoTag();
+        super.init();
         setUpdateInverval(1000 * 60 * 15); // 15 minutes
         //updateTwitchAPI.scheduleAtFixedRate(updateTwitchRunnable, 0, 1, TimeUnit.MINUTES);
     }
@@ -55,15 +53,15 @@ public abstract class TwitchAPI extends API
     @Override
     protected boolean update()
     {
-        currentStream = twitch.streams().get(channelName);
+        currentStream = twitch.streams().get(getChannelName());
         if (currentStream == null)
         {
-            LogUtils.logErr("data/channels/" + channel.getName() + "/logs/", "/api", "Failed to update stream object. Stream is offline or Twitch API may be down");
+            LogUtils.logErr("data/channels/" + getChannel().getName() + "/logs/", "/api", "Failed to update stream object. Stream is offline or Twitch API may be down");
             return false;
         } else {
             lastValidStream = currentStream;
             setLastUpdateTime();
-            LogUtils.logMsg("data/channels/" + channel.getName() + "/logs/", "/api", "Successfully updated stream object");
+            LogUtils.logMsg("data/channels/" + getChannel().getName() + "/logs/", "/api", "Successfully updated stream object");
             return true;
         }
     }
@@ -76,7 +74,7 @@ public abstract class TwitchAPI extends API
 
         if (lastValidStream == null)
         {
-            channel.sendMessage(channel.getNameNoTag() + " is offline. Check the schedule for usual stream times");
+            getChannel().sendMessage(getChannelName() + " is offline. Check the schedule for usual stream times");
             return;
         }
 
@@ -84,12 +82,12 @@ public abstract class TwitchAPI extends API
         long timeSinceLastUpdate = currentTime - getLastUpdateTime();
         long uptime = currentTime - (lastValidStream.getCreatedAt().getTime() + timeSinceLastUpdate);
 
-        String replyString = channel.getNameNoTag() + " has been live for ";
+        String replyString = getChannelName() + " has been live for ";
 //        if (!updated)
 //            replyString += "at least ";
         if (uptime < 10000 && uptime >= 0)
         {
-            channel.sendMessage("Just started! Calm yo tits!");
+            getChannel().sendMessage("Just started! Calm yo tits!");
             return;
         } else if (uptime >= 10000 && uptime < 60000)
         {
@@ -108,7 +106,7 @@ public abstract class TwitchAPI extends API
             hourString = hours > 1 ? "hours" : "hour";
             replyString += hours + " " + hourString + " and " + minutes + " " + minuteString;
         }
-        channel.sendMessage(replyString);
+        getChannel().sendMessage(replyString);
     }
 
     public boolean isOnline() {

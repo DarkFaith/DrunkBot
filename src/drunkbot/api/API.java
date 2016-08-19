@@ -18,15 +18,20 @@ interface Updatable
 public abstract class API implements Updatable
 {
     private TwitchChannel channel;
+    private String channelName = "";
     private API(){};
     public API(TwitchChannel channel)
     {
-        this.channel = channel;
+        setChannel(channel);
     }
 
     public TwitchChannel getChannel()
     {
         return channel;
+    }
+
+    public void setChannel(TwitchChannel channel) {
+        this.channel = channel;
     }
 
     private long updateInterval = 1000 * 60 * 30;
@@ -43,7 +48,13 @@ public abstract class API implements Updatable
         }
     };
 
-    public abstract void init();
+    public void init() {
+        this.channelName = channel.getNameNoTag();
+    }
+
+    public String getChannelName() {
+        return this.channelName;
+    }
 
     public void setUpdateInverval(long millis)
     {
