@@ -27,13 +27,13 @@ public abstract class TwitchChannel implements TwitchChannelListener
         @Override
         public void onCurrencyGenerated(double amountGenerated, double bonusGenerated)
         {
-            if (bonusGenerated > 0)
-            {
-                sendMessage("Everyone here gets " + Globals.g_currencyFormat.format(amountGenerated)
-                        + " (+" + Globals.g_currencyFormat.format(bonusGenerated) + ") souls for being awesome! (+2 souls for every 5 viewers)");
-            } else {
-                sendMessage("Everyone here gets " + Globals.g_currencyFormat.format(amountGenerated) + " souls for being awesome!");
-            }
+//            if (bonusGenerated > 0)
+//            {
+//                sendMessage("Everyone here gets " + Globals.g_currencyFormat.format(amountGenerated)
+//                        + " (+" + Globals.g_currencyFormat.format(bonusGenerated) + ") souls for being awesome! (+2 souls for every 5 viewers)");
+//            } else {
+//                sendMessage("Everyone here gets " + Globals.g_currencyFormat.format(amountGenerated) + " souls for being awesome!");
+//            }
             currencyManager.save();
         }
     };

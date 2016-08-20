@@ -45,7 +45,15 @@ public class VariableParser
            }
            switch (variable) {
                case "CURRENCY_AMOUNT":
-                   replacedMessage = replacedMessage.replaceAll(variable, Globals.g_currencyFormat.format(channel.getCurrencyManager().getGenerateAmount()));
+                   double amountGenerated;
+                   if (channel.getTwitchAPI().isOnline(channel.getCurrencyManager().getGenerateInterval()))
+                   {
+                       amountGenerated = channel.getCurrencyManager().getGenerateAmount();
+                   } else {
+                       amountGenerated = channel.getCurrencyManager().getOfflineGenerateAmount();
+                   }
+
+                   replacedMessage = replacedMessage.replaceAll(variable, Globals.g_currencyFormat.format(amountGenerated));
                    break;
                case "CURRENCY_INTERVAL":
                    replacedMessage = replacedMessage.replaceAll(variable, String.valueOf(channel.getCurrencyManager().getGenerateInterval()/1000));

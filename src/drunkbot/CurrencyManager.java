@@ -38,7 +38,7 @@ public abstract class CurrencyManager implements TwitchChannelListener
         {
             double amount;
             double bonusGenerateAmount = 0;
-            if (channel.getTwitchAPI().isOnline()) {
+            if (channel.getTwitchAPI().isOnline(generateInterval)) {
                 //bonusGenerateAmount = 2 * maxNumUsers/5;
                 bonusGenerateAmount = 0; // not enabled
                 amount = generateAmount + bonusGenerateAmount;

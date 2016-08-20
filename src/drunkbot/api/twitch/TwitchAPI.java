@@ -113,6 +113,18 @@ public abstract class TwitchAPI extends API
         boolean updated = update();
         return currentStream != null;
     }
+
+    /**
+     *
+     * @param customUpdateMillis number of milliseconds since last check before doing API request
+     * @return
+     */
+    public boolean isOnline(long customUpdateMillis) {
+        if (isUpdateDue(customUpdateMillis)) {
+            update();
+        }
+        return currentStream != null;
+    }
     
     public String getCurrentGame()
     {

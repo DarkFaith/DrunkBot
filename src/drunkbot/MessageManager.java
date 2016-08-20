@@ -1,6 +1,7 @@
 package drunkbot;
 
 import drunkbot.cmd.CommandsCustom;
+import drunkbot.manager.ScheduledManager;
 import drunkbot.twitchai.bot.TwitchChannel;
 import drunkbot.twitchai.util.LogUtils;
 
@@ -118,6 +119,16 @@ public class MessageManager extends ScheduledManager
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void setOnline(boolean online)
+    {
+        if (online) {
+            setRunInterval(getOnlineRunInterval());
+        } else {
+            setRunInterval(getOfflineRunInterval());
+        }
     }
 
     public String getList() {

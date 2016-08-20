@@ -1,7 +1,6 @@
-package drunkbot;
+package drunkbot.manager;
 
 import drunkbot.twitchai.bot.TwitchChannel;
-import drunkbot.twitchai.util.LogUtils;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,7 +13,10 @@ import java.util.concurrent.TimeUnit;
 public abstract class ScheduledManager extends Manager
 {
     private long timestampLastRun = System.currentTimeMillis();
-    private int runInterval = 1000 * 60 * 30; // 30 minutes in milliseconds
+    public final int DEFAULT_RUN_INTERVAL = 100 * 60 * 30; // 30 minutes in milliseconds
+    private int runInterval = DEFAULT_RUN_INTERVAL; // 30 minutes in milliseconds
+    private int onlineRunInterval = DEFAULT_RUN_INTERVAL;
+    private int offlineRunInterval = 1000 * 60 * 120;
 
     private Runnable scheduledRunnable = new Runnable()
     {
@@ -66,11 +68,21 @@ public abstract class ScheduledManager extends Manager
 
     /**
      *
-     * @param interval interval in seconds to execute the drunkbot.ScheduledManager#onScheduledRun() method
+     * @param interval interval in seconds to execute the drunkbot.manager.ScheduledManager#onScheduledRun() method
      */
     public void setRunInterval(int interval)
     {
         runInterval = interval * 1000;
         initCurrencyScheduler();
     }
+
+    public int getOfflineRunInterval() {
+        return offlineRunInterval;
+    }
+
+    public int getOnlineRunInterval() {
+        return onlineRunInterval;
+    }
+
+    public abstract void setOnline(boolean online);
 }

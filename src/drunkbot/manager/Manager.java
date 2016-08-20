@@ -1,4 +1,4 @@
-package drunkbot;
+package drunkbot.manager;
 
 import drunkbot.twitchai.bot.TwitchChannel;
 
