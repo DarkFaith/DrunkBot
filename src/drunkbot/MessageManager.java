@@ -16,6 +16,8 @@ public class MessageManager extends ScheduledManager
 {
     ArrayList<String> messageList = new ArrayList<>();
     int lastMessageIndex = -1;
+    int minMessagesToRun = 15;
+    int numMessagesSinceLastRun = 0;
 
     public MessageManager(TwitchChannel channel)
     {
@@ -51,7 +53,13 @@ public class MessageManager extends ScheduledManager
         String message = getNextMessage();
         if (message != null)
         {
-            getTwitchChannel().sendMessage(message);
+            if (numMessagesSinceLastRun >= minMessagesToRun)
+            {
+                getTwitchChannel().sendMessage(message);
+                numMessagesSinceLastRun = 0;
+            } else {
+                LogUtils.logMsg("Timer message not sent since minimum of " + minMessagesToRun + " not reached");
+            }
         } else {
             LogUtils.logErr("Timer message was null");
         }
@@ -67,6 +75,14 @@ public class MessageManager extends ScheduledManager
             lastMessageIndex = 0;
 
         return commandsCustom.get(messageList.get(lastMessageIndex));
+    }
+
+    public int getMinMessagesToRun() {
+        return minMessagesToRun;
+    }
+
+    public void setMinMessagesToRun(int num) {
+        this.minMessagesToRun = num;
     }
 
     @Override
@@ -121,14 +137,20 @@ public class MessageManager extends ScheduledManager
         return true;
     }
 
+    public void onMessage() {
+        numMessagesSinceLastRun++;
+    }
+
     @Override
-    public void setOnline(boolean online)
+    public void onOnline()
     {
-        if (online) {
-            setRunInterval(getOnlineRunInterval());
-        } else {
-            setRunInterval(getOfflineRunInterval());
-        }
+        setRunInterval(getOnlineRunInterval());
+    }
+
+    @Override
+    public void onOffline()
+    {
+        setRunInterval(getOfflineRunInterval());
     }
 
     public String getList() {

@@ -123,7 +123,9 @@ public abstract class TwitchAPI extends API
         if (isUpdateDue(customUpdateMillis)) {
             update();
         }
-        return currentStream != null;
+        boolean online = currentStream != null;
+        getChannel().setOnline(online);
+        return online;
     }
     
     public String getCurrentGame()

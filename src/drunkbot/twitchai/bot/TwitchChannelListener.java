@@ -7,4 +7,5 @@ public interface TwitchChannelListener
 {
     void onUserAdded();
     void onUserRemoved();
+    void onMessage();
 }

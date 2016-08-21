@@ -1,10 +1,6 @@
 package drunkbot;
 
-import drunkbot.twitchai.bot.TwitchChannel;
-
 import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Created by Kevin on 26/06/2016.

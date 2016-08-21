@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 public abstract class ScheduledManager extends Manager
 {
     private long timestampLastRun = System.currentTimeMillis();
-    public final int DEFAULT_RUN_INTERVAL = 100 * 60 * 30; // 30 minutes in milliseconds
+    public final int DEFAULT_RUN_INTERVAL = 1000 * 60 * 30; // 30 minutes in milliseconds
     private int runInterval = DEFAULT_RUN_INTERVAL; // 30 minutes in milliseconds
     private int onlineRunInterval = DEFAULT_RUN_INTERVAL;
-    private int offlineRunInterval = 1000 * 60 * 120;
+    private int offlineRunInterval = 1000 * 60 * 60;
 
     private Runnable scheduledRunnable = new Runnable()
     {
@@ -68,7 +68,7 @@ public abstract class ScheduledManager extends Manager
 
     /**
      *
-     * @param interval interval in seconds to execute the drunkbot.manager.ScheduledManager#onScheduledRun() method
+     * @param interval interval in minutes to execute the drunkbot.manager.ScheduledManager#onScheduledRun() method
      */
     public void setRunInterval(int interval)
     {
@@ -84,5 +84,7 @@ public abstract class ScheduledManager extends Manager
         return onlineRunInterval;
     }
 
-    public abstract void setOnline(boolean online);
+    public abstract void onOnline();
+
+    public abstract void onOffline();
 }

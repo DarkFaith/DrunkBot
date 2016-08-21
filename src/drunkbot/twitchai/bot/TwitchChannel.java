@@ -8,11 +8,13 @@ import drunkbot.cmd.CommandsCustom;
 import drunkbot.CurrencyManager;
 import drunkbot.twitchai.bot.channel.Settings;
 import drunkbot.twitchai.util.Globals;
+import drunkbot.twitchai.util.LogUtils;
 
 import java.util.ArrayList;
 
 public abstract class TwitchChannel implements TwitchChannelListener
 {
+    private boolean online = false;
     private Settings settings = new Settings();
     private String m_name;
     private ArrayList<TwitchUser> m_users;
@@ -24,6 +26,12 @@ public abstract class TwitchChannel implements TwitchChannelListener
     private MessageManager messageManager = new MessageManager(this);
     private CurrencyManager currencyManager = new CurrencyManager(this)
     {
+        @Override
+        public void onMessage()
+        {
+
+        }
+
         @Override
         public void onCurrencyGenerated(double amountGenerated, double bonusGenerated)
         {
@@ -288,4 +296,26 @@ public abstract class TwitchChannel implements TwitchChannelListener
     {
         currencyManager.onUserRemoved();
     }
+
+    @Override
+    public void onMessage() {
+        messageManager.onMessage();
+    }
+
+    boolean onlineCheckHasRun = false;
+    public void setOnline(boolean online)
+    {
+        if (onlineCheckHasRun && this.online == online)
+            return;
+        LogUtils.logMsg("Stream online status set to: " + online);
+        this.online = online;
+        if (online)
+        {
+            messageManager.onOnline();
+        } else {
+            messageManager.onOffline();
+        }
+        onlineCheckHasRun = true;
+    }
+
 }
