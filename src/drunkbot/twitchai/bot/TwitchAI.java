@@ -832,10 +832,10 @@ public class TwitchAI extends PircBot
                                 sendTwitchMessage(channel, "Timer messages are: " + twitch_channel.getMessageManager().getList());
                             } else if (action.equals("interval")) {
                                 String intervalString = cmdKey;
-                                int interval = Integer.parseInt(intervalString);
+                                int interval = Integer.parseInt(intervalString) * 1000;
                                 int oldInterval = twitch_channel.getMessageManager().getRunInterval()/1000;
                                 twitch_channel.getMessageManager().setRunInterval(interval);
-                                sendTwitchMessage(channel, "Timer messages will now be displayed every " + interval + " seconds. (Was " + oldInterval + " seconds)");
+                                sendTwitchMessage(channel, "Timer messages will now be displayed every " + interval/1000 + " seconds. (Was " + oldInterval + " seconds)");
                             }
                         } else if (msg_array.length == 1) {
                             sendTwitchMessage(channel, "Timer messages are: " + twitch_channel.getMessageManager().getList());
@@ -1221,6 +1221,8 @@ public class TwitchAI extends PircBot
             time = (float) (timeEnd - timeStart) / 1000000.0f;
 
             setCmdTime(getCmdTime() * 0.1f + time * 0.9f);
+        } else {
+            twitch_channel.onMessage();
         }
     }
 

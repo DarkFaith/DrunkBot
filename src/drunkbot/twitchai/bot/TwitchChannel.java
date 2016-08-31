@@ -75,15 +75,15 @@ public abstract class TwitchChannel implements TwitchChannelListener
     {
         m_name = name;
         m_dir = Globals.g_channel_base_dir + m_name + "/";
-        m_users = new ArrayList<TwitchUser>();
+        m_users = new ArrayList<>();
         m_cmd_sent = 0;
         quotes.load();
         mediaReader.start();
         commandsCustom.load();
-        riotAPI.load();
-        twitchAPI.init();
         currencyManager.init();
         messageManager.init();
+        riotAPI.init();
+        twitchAPI.init();
     }
     {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
@@ -140,7 +140,7 @@ public abstract class TwitchChannel implements TwitchChannelListener
 
     public ArrayList<TwitchUser> getOperators()
     {
-        ArrayList<TwitchUser> result = new ArrayList<TwitchUser>();
+        ArrayList<TwitchUser> result = new ArrayList<>();
 
         for (TwitchUser u : m_users)
         {
@@ -155,7 +155,7 @@ public abstract class TwitchChannel implements TwitchChannelListener
 
     public ArrayList<TwitchUser> getModerators()
     {
-        ArrayList<TwitchUser> result = new ArrayList<TwitchUser>();
+        ArrayList<TwitchUser> result = new ArrayList<>();
 
         for (TwitchUser u : m_users)
         {

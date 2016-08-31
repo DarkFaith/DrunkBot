@@ -47,6 +47,8 @@ public abstract class RiotAPI extends API implements Storable
 
     public void init()
     {
+        super.init();
+        load();
         setUpdateInverval(1000 * 60 * 30);
     }
 
@@ -62,7 +64,6 @@ public abstract class RiotAPI extends API implements Storable
                     accountList.add(accountName);
                 }
             }
-            init();
             return true;
         } catch (IOException ex)
         {
@@ -104,6 +105,8 @@ public abstract class RiotAPI extends API implements Storable
         if (leagueMap == null)
         {
             doUpdate(true);
+        } else {
+            doUpdate(false);
         }
         List<League> summonerLeagueList = leagueMap.get(summonerID);
 

@@ -48,13 +48,14 @@ public class MessageManager extends ScheduledManager
     }
 
     @Override
-    protected void onScheduledRun()
+    protected void doScheduledRun()
     {
         String message = getNextMessage();
         if (message != null)
         {
             if (numMessagesSinceLastRun >= minMessagesToRun)
             {
+                LogUtils.logMsg("Timer message sent");
                 getTwitchChannel().sendMessage(message);
                 numMessagesSinceLastRun = 0;
             } else {
